@@ -383,53 +383,6 @@
       "name": "Tap Prompt Shadow",
       "order": 11.644447501347162
     },
-    "a02b4479-461e-40c2-ba91-0ccabbd1bd83": {
-      "id": "a02b4479-461e-40c2-ba91-0ccabbd1bd83",
-      "position": [
-        0,
-        0,
-        0
-      ],
-      "rotation": [
-        0,
-        0,
-        0,
-        1
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "parentId": "b534657a-38e6-4275-a37d-77b655561d5b",
-      "components": {
-        "a2c75775-5a0f-44d7-910c-c111bc850bf6": {
-          "id": "a2c75775-5a0f-44d7-910c-c111bc850bf6",
-          "name": "position-animation",
-          "parameters": {
-            "fromY": -2,
-            "loop": false,
-            "easeOut": true,
-            "easingFunction": "Elastic",
-            "duration": 2000,
-            "toY": 0.3
-          }
-        }
-      },
-      "name": "Model",
-      "order": 1.1209803013844988,
-      "gltfModel": {
-        "src": {
-          "type": "asset",
-          "asset": "assets/8-jewel.glb"
-        },
-        "animationClip": "",
-        "loop": true
-      },
-      "shadow": {
-        "castShadow": true
-      }
-    },
     "5ac3deca-2126-4b56-b6a2-1442d035047a": {
       "id": "5ac3deca-2126-4b56-b6a2-1442d035047a",
       "position": [
@@ -542,6 +495,55 @@
       "order": 14.958687422311806,
       "ui": {
         "type": "overlay"
+      }
+    },
+    "61950102-5463-418b-86d7-d73be97d1200": {
+      "id": "61950102-5463-418b-86d7-d73be97d1200",
+      "position": [
+        0.007557187936561904,
+        0,
+        0.015737987354594418
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "parentId": "b534657a-38e6-4275-a37d-77b655561d5b",
+      "components": {
+        "a2c75775-5a0f-44d7-910c-c111bc850bf6": {
+          "id": "a2c75775-5a0f-44d7-910c-c111bc850bf6",
+          "name": "position-animation",
+          "parameters": {
+            "fromY": -2,
+            "loop": false,
+            "easeOut": true,
+            "easingFunction": "Elastic",
+            "duration": 2000,
+            "toY": 0.3
+          }
+        }
+      },
+      "gltfModel": {
+        "src": {
+          "type": "asset",
+          "asset": "assets/batebola.glb"
+        },
+        "animationClip": "",
+        "loop": true
+      },
+      "name": "batebola.glb",
+      "order": 2.3939356983371085,
+      "shadow": {
+        "castShadow": true
       }
     }
   },
