@@ -23,6 +23,11 @@
           "id": "92cc446e-2931-499b-9be0-0472f042433a",
           "name": "logo",
           "parameters": {}
+        },
+        "e23c4344-5612-4aee-a61b-5ee1a76bffc7": {
+          "id": "e23c4344-5612-4aee-a61b-5ee1a76bffc7",
+          "name": "pinch-scale",
+          "parameters": {}
         }
       },
       "name": "Logo",
