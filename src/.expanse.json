@@ -257,6 +257,10 @@
             "prefab": {
               "type": "entity",
               "id": "b534657a-38e6-4275-a37d-77b655561d5b"
+            },
+            "resetButton": {
+              "type": "entity",
+              "id": "5ac3deca-2126-4b56-b6a2-1442d035047a"
             }
           }
         }
