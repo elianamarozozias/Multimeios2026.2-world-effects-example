@@ -142,8 +142,8 @@
     "c7231d72-b7a3-44ea-b5f5-bb9ea9572ed9": {
       "id": "c7231d72-b7a3-44ea-b5f5-bb9ea9572ed9",
       "position": [
-        0,
-        10.938518268367439,
+        -9.546973370717888,
+        -6.119541532729869,
         -2.5468804365107705
       ],
       "rotation": [
@@ -159,7 +159,7 @@
       ],
       "geometry": null,
       "material": null,
-      "parentId": "84028e73-ee70-412d-b8d4-c09bf07c655c",
+      "parentId": "904308fe-98f5-4c93-bf62-f39d50c6e602",
       "components": {
         "f31ef85b-8c9e-41ca-817f-a53bb7000a2d": {
           "id": "f31ef85b-8c9e-41ca-817f-a53bb7000a2d",
@@ -169,8 +169,8 @@
       },
       "ui": {
         "flexDirection": "row",
-        "width": "100%",
-        "height": "100%",
+        "width": 393,
+        "height": 665,
         "type": "overlay",
         "background": "#000000",
         "backgroundOpacity": 1,
@@ -179,7 +179,7 @@
         "stackingOrder": 100
       },
       "name": "Loading Screen",
-      "order": 16.570036688545937
+      "order": 14.596373557035621
     },
     "2f4186f0-5825-4b3c-868a-24bc7945a328": {
       "id": "2f4186f0-5825-4b3c-868a-24bc7945a328",
@@ -206,7 +206,7 @@
       "ui": {
         "width": 200,
         "height": 200,
-        "text": "Camera Loading",
+        "text": "Carregando",
         "color": "#ffffff",
         "fontSize": 24,
         "type": "3d",
