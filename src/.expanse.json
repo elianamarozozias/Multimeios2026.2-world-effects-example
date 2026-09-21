@@ -325,7 +325,7 @@
       "parentId": "904308fe-98f5-4c93-bf62-f39d50c6e602",
       "components": {},
       "ui": {
-        "text": "Tap to place",
+        "text": "Clique para Inserir",
         "width": "100%",
         "height": 100,
         "type": "overlay",
@@ -370,7 +370,7 @@
       "parentId": "904308fe-98f5-4c93-bf62-f39d50c6e602",
       "components": {},
       "ui": {
-        "text": "Tap to place",
+        "text": "Clique para Inserir\n",
         "width": "100%",
         "height": 100,
         "type": "overlay",
@@ -466,9 +466,9 @@
       "components": {},
       "name": "Text",
       "ui": {
-        "width": 50,
+        "width": 74,
         "height": 14,
-        "text": "Reset",
+        "text": "Restaurar",
         "color": "#ffffff",
         "fontSize": 16,
         "font": {
