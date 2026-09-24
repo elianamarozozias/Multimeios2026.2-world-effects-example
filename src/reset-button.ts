@@ -1,6 +1,6 @@
 import * as ecs from '@8thwall/ecs'
 import { Logo } from './logo'
-import { OBJECT_PLACED_EVENT } from './tap-to-place'
+import { OBJECT_PLACED_EVENT, OBJECT_RESET_EVENT } from './tap-to-place'
 
 const logoQuery = ecs.defineQuery([Logo])
 
@@ -15,11 +15,11 @@ ecs.registerComponent({
 
     defineState('placed')
       .onEvent(ecs.input.UI_CLICK, 'resetting')
-      
+
     defineState('resetting')
       .wait(1000, 'nothing-placed')
       .onEnter(() => {
-      const tempVector = ecs.math.vec3.zero();
+        const tempVector = ecs.math.vec3.zero()
         logoQuery(world).forEach(e => {
           world.transform.getLocalPosition(e, tempVector)
           ecs.PositionAnimation.set(world, e, {
@@ -38,8 +38,10 @@ ecs.registerComponent({
       })
       .onExit(() => {
         logoQuery(world).forEach(e => {
-          world.deleteEntity(e)
+          ecs.PositionAnimation.remove(world, e)
+          world.transform.setLocalPosition(e, {x: 0, y: -100, z: 0})
         })
+        world.events.dispatch(world.events.globalId, OBJECT_RESET_EVENT)
       })
   }
 })

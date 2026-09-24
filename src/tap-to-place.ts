@@ -1,6 +1,10 @@
 import * as ecs from '@8thwall/ecs'
 
 const OBJECT_PLACED_EVENT = 'object-placed'
+const OBJECT_RESET_EVENT = 'object-reset'
+
+const PARKING_SPOT = {x: 0, y: -100, z: 0}
+const WARMUP_SPOT = {x: 0, y: 0, z: -1.5}   // à frente da câmera, durante o loading
 
 ecs.registerComponent({
   name: 'tap-to-place',
@@ -10,35 +14,66 @@ ecs.registerComponent({
   },
   stateMachine: ({world, eid, schemaAttribute, defineState}) => {
     let placedEid: any = null
+    let isPlaced = false
 
-    defineState('initial').initial().listen(eid, ecs.input.SCREEN_TOUCH_START, (e) => {
-      if (!e.data.worldPosition) {
-        return
-      }
-      const pos = e.data.worldPosition
+    const createParked = (spot) => {
+      const newEid = world.createEntity(schemaAttribute.get(eid).prefab)
+      world.getEntity(newEid).setLocalPosition(spot)
+      return newEid
+    }
 
-      // a entidade pode ter sido apagada pelo reset: valida antes de usar
-      if (placedEid !== null) {
-        try {
-          ecs.Position.get(world, placedEid)
-          return   // objeto vivo: ignora o toque
-        } catch (err) {
-          placedEid = null   // morreu no reset: pode criar de novo
+    // nasce visível: o GPU renderiza e compila shader durante a tela de loading
+    placedEid = createParked(WARMUP_SPOT)
+
+    defineState('warmup')
+      .initial()
+      .onEvent(ecs.events.REALITY_READY, 'initial', {target: world.events.globalId})
+      .onExit(() => {
+        // realidade pronta: esconde o objeto já aquecido
+        world.getEntity(placedEid).setLocalPosition(PARKING_SPOT)
+      })
+
+    defineState('initial')
+      .listen(world.events.globalId, OBJECT_RESET_EVENT, () => {
+        isPlaced = false
+      })
+      .listen(eid, ecs.input.SCREEN_TOUCH_START, (e) => {
+        if (!e.data.worldPosition) {
+          return
         }
-      }
+        const pos = e.data.worldPosition
 
-      placedEid = world.createEntity(schemaAttribute.get(eid).prefab)
-      const entity = world.getEntity(placedEid)
-      entity.setLocalPosition(pos)
+        let alive = false
+        if (placedEid !== null) {
+          try {
+            ecs.Position.get(world, placedEid)
+            alive = true
+          } catch (err) {
+            placedEid = null
+            isPlaced = false
+          }
+        }
 
-      const cam = ecs.Position.get(world, world.camera.getActiveEid())
-      const {facingOffset} = schemaAttribute.get(eid)
-      const yaw = Math.atan2(cam.x - pos.x, cam.z - pos.z) + facingOffset * (Math.PI / 180)
-      entity.set(ecs.Quaternion, ecs.math.quat.yRadians(yaw))
+        if (alive && isPlaced) {
+          return
+        }
 
-      world.events.dispatch(world.events.globalId, OBJECT_PLACED_EVENT)
-    })
+        if (!alive) {
+          placedEid = createParked(PARKING_SPOT)
+        }
+
+        const entity = world.getEntity(placedEid)
+        entity.setLocalPosition(pos)
+
+        const cam = ecs.Position.get(world, world.camera.getActiveEid())
+        const {facingOffset} = schemaAttribute.get(eid)
+        const yaw = Math.atan2(cam.x - pos.x, cam.z - pos.z) + facingOffset * (Math.PI / 180)
+        entity.set(ecs.Quaternion, ecs.math.quat.yRadians(yaw))
+
+        isPlaced = true
+        world.events.dispatch(world.events.globalId, OBJECT_PLACED_EVENT)
+      })
   },
 })
 
-export {OBJECT_PLACED_EVENT}
+export {OBJECT_PLACED_EVENT, OBJECT_RESET_EVENT}
