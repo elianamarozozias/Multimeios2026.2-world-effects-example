@@ -539,7 +539,7 @@
             "easeOut": true,
             "easingFunction": "Elastic",
             "duration": 2000,
-            "toY": 0.3
+            "toY": 0
           }
         }
       },
