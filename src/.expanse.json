@@ -28,7 +28,8 @@
           "id": "e23c4344-5612-4aee-a61b-5ee1a76bffc7",
           "name": "pinch-scale",
           "parameters": {
-            "maxScale": 30
+            "maxScale": 3000,
+            "minScale": 1
           }
         }
       },

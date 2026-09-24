@@ -18,23 +18,17 @@ ecs.registerComponent({
       const pos = e.data.worldPosition
 
       // a entidade pode ter sido apagada pelo reset: valida antes de usar
-      let entity: any = null
       if (placedEid !== null) {
         try {
-          entity = world.getEntity(placedEid)
-          // força um acesso real para detectar entidade morta
           ecs.Position.get(world, placedEid)
+          return   // objeto vivo: ignora o toque
         } catch (err) {
-          entity = null
-          placedEid = null
+          placedEid = null   // morreu no reset: pode criar de novo
         }
       }
 
-      if (entity === null) {
-        placedEid = world.createEntity(schemaAttribute.get(eid).prefab)
-        entity = world.getEntity(placedEid)
-      }
-
+      placedEid = world.createEntity(schemaAttribute.get(eid).prefab)
+      const entity = world.getEntity(placedEid)
       entity.setLocalPosition(pos)
 
       const cam = ecs.Position.get(world, world.camera.getActiveEid())
