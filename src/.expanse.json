@@ -27,7 +27,9 @@
         "e23c4344-5612-4aee-a61b-5ee1a76bffc7": {
           "id": "e23c4344-5612-4aee-a61b-5ee1a76bffc7",
           "name": "pinch-scale",
-          "parameters": {}
+          "parameters": {
+            "maxScale": 30
+          }
         }
       },
       "name": "Logo",
