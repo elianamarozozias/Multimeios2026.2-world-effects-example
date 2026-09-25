@@ -209,7 +209,7 @@
       "ui": {
         "width": 200,
         "height": 200,
-        "text": "Carregando",
+        "text": "Carregando...",
         "color": "#ffffff",
         "fontSize": 24,
         "type": "3d",
