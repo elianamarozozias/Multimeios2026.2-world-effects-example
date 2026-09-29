@@ -179,10 +179,12 @@
         "backgroundOpacity": 1,
         "alignItems": "center",
         "justifyContent": "center",
-        "stackingOrder": 100
+        "stackingOrder": 100,
+        "ignoreRaycast": false
       },
       "name": "Loading Screen",
-      "order": 14.596373557035621
+      "order": 14.596373557035621,
+      "hidden": false
     },
     "2f4186f0-5825-4b3c-868a-24bc7945a328": {
       "id": "2f4186f0-5825-4b3c-868a-24bc7945a328",
@@ -304,96 +306,6 @@
       "components": {},
       "name": "Hider",
       "order": 7.322553197845954
-    },
-    "9b5668bc-b512-4bb6-9c6b-8ba97d3f8af0": {
-      "id": "9b5668bc-b512-4bb6-9c6b-8ba97d3f8af0",
-      "position": [
-        16.857510635812545,
-        15.927690665172552,
-        0
-      ],
-      "rotation": [
-        0,
-        0,
-        0,
-        1
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "geometry": null,
-      "material": null,
-      "parentId": "904308fe-98f5-4c93-bf62-f39d50c6e602",
-      "components": {},
-      "ui": {
-        "text": "Clique para Inserir",
-        "width": "100%",
-        "height": 100,
-        "type": "overlay",
-        "verticalTextAlign": "start",
-        "textAlign": "center",
-        "fontSize": 32,
-        "position": "absolute",
-        "top": 10,
-        "left": 10,
-        "bottom": "",
-        "right": "",
-        "stackingOrder": -1,
-        "color": "#ffffff",
-        "font": {
-          "type": "font",
-          "font": "Roboto"
-        }
-      },
-      "name": "Tap Prompt",
-      "order": 10.427624126637916
-    },
-    "637f7413-261d-48bb-99c9-154bd99360da": {
-      "id": "637f7413-261d-48bb-99c9-154bd99360da",
-      "position": [
-        16.857510635812545,
-        15.927690665172552,
-        0
-      ],
-      "rotation": [
-        0,
-        0,
-        0,
-        1
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "geometry": null,
-      "material": null,
-      "parentId": "904308fe-98f5-4c93-bf62-f39d50c6e602",
-      "components": {},
-      "ui": {
-        "text": "Clique para Inserir\n",
-        "width": "100%",
-        "height": 100,
-        "type": "overlay",
-        "verticalTextAlign": "start",
-        "textAlign": "center",
-        "fontSize": 32,
-        "position": "absolute",
-        "top": 12,
-        "left": 12,
-        "bottom": "",
-        "right": "",
-        "stackingOrder": -2,
-        "color": "#000000",
-        "font": {
-          "type": "font",
-          "font": "Roboto"
-        }
-      },
-      "name": "Tap Prompt Shadow",
-      "order": 11.644447501347162
     },
     "5ac3deca-2126-4b56-b6a2-1442d035047a": {
       "id": "5ac3deca-2126-4b56-b6a2-1442d035047a",
@@ -557,6 +469,418 @@
       "shadow": {
         "castShadow": true
       }
+    },
+    "9e443414-7da8-443e-9ffd-7519fc5f85fd": {
+      "id": "9e443414-7da8-443e-9ffd-7519fc5f85fd",
+      "position": [
+        -9.546973370717888,
+        -17.058059801097308,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "parentId": "904308fe-98f5-4c93-bf62-f39d50c6e602",
+      "components": {
+        "f2d45bdd-f087-4224-90e4-ae28dbcde61a": {
+          "id": "f2d45bdd-f087-4224-90e4-ae28dbcde61a",
+          "name": "Hide On Click",
+          "parameters": {}
+        }
+      },
+      "ui": {
+        "type": "3d",
+        "width": 348,
+        "height": 85,
+        "background": "#3f1240",
+        "borderRadius": 18,
+        "flexDirection": "row",
+        "backgroundOpacity": 1,
+        "padding": "10",
+        "gap": "6",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "position": "absolute",
+        "top": 290,
+        "left": 22,
+        "bottom": "",
+        "right": ""
+      },
+      "name": "Button Instrução",
+      "order": 12.78747306033846
+    },
+    "448e3f82-f387-4286-92fb-d3ebe83b14d0": {
+      "id": "448e3f82-f387-4286-92fb-d3ebe83b14d0",
+      "position": [
+        -0.323,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "parentId": "9e443414-7da8-443e-9ffd-7519fc5f85fd",
+      "components": {},
+      "name": "LAFDA icon",
+      "ui": {
+        "width": 45,
+        "height": 45,
+        "image": {
+          "type": "asset",
+          "asset": "assets/lafda branco.png"
+        },
+        "backgroundOpacity": 1,
+        "backgroundSize": "contain"
+      },
+      "order": 0.0261042765907733
+    },
+    "669a17ca-4775-417f-a943-3ab8a5253fc6": {
+      "id": "669a17ca-4775-417f-a943-3ab8a5253fc6",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "parentId": "9e443414-7da8-443e-9ffd-7519fc5f85fd",
+      "components": {},
+      "name": "Text",
+      "ui": {
+        "width": 200,
+        "height": 83,
+        "text": "Clique em uma zona\nplana para inserir o 3D\n\nOK\n",
+        "color": "#ffffff",
+        "fontSize": 18,
+        "verticalTextAlign": "end",
+        "textAlign": "center"
+      },
+      "order": 0.35171163447885684
+    },
+    "f97d11bc-45a8-417e-a9e8-40f799dfbe10": {
+      "id": "f97d11bc-45a8-417e-a9e8-40f799dfbe10",
+      "position": [
+        -0.323,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "components": {},
+      "name": "UFF icon",
+      "ui": {
+        "width": 45,
+        "height": 45,
+        "image": {
+          "type": "asset",
+          "asset": "assets/simbolo uff.png"
+        },
+        "backgroundOpacity": 1,
+        "backgroundSize": "contain"
+      },
+      "order": 0.6203337522484279,
+      "parentId": "9e443414-7da8-443e-9ffd-7519fc5f85fd"
+    },
+    "859debc2-e91d-4b1b-8744-777b4208f6d9": {
+      "id": "859debc2-e91d-4b1b-8744-777b4208f6d9",
+      "position": [
+        -1.0859013830497375,
+        -24.239849579747027,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "parentId": "5ac3deca-2126-4b56-b6a2-1442d035047a",
+      "components": {},
+      "ui": {
+        "type": "3d",
+        "width": 393,
+        "height": 84,
+        "flexDirection": "row",
+        "padding": "10",
+        "gap": "6",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "position": "absolute",
+        "top": -603,
+        "left": -276,
+        "bottom": "",
+        "right": ""
+      },
+      "name": "Gestos",
+      "order": 3.001092109017396
+    },
+    "73f70268-3168-48df-9698-466200c7479c": {
+      "id": "73f70268-3168-48df-9698-466200c7479c",
+      "position": [
+        -0.323,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "parentId": "859debc2-e91d-4b1b-8744-777b4208f6d9",
+      "components": {},
+      "name": "Icon",
+      "ui": {
+        "width": 100,
+        "height": 50,
+        "image": {
+          "type": "asset",
+          "asset": "assets/swipe icon svg.svg"
+        },
+        "backgroundOpacity": 1,
+        "backgroundSize": "contain"
+      },
+      "order": 0.027294271096963696
+    },
+    "ff46459e-8d97-400d-9c54-191b99eff786": {
+      "id": "ff46459e-8d97-400d-9c54-191b99eff786",
+      "position": [
+        -0.323,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "components": {},
+      "name": "Icon (1)",
+      "ui": {
+        "width": 144,
+        "height": 50,
+        "image": {
+          "type": "asset",
+          "asset": "assets/pinch icon svg.svg"
+        },
+        "backgroundOpacity": 1,
+        "backgroundSize": "contain"
+      },
+      "order": 1.5953853945008114,
+      "parentId": "859debc2-e91d-4b1b-8744-777b4208f6d9"
+    },
+    "df98c1c6-678c-4119-836d-723ee0e2fa4b": {
+      "id": "df98c1c6-678c-4119-836d-723ee0e2fa4b",
+      "position": [
+        -0.323,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "components": {},
+      "name": "Icon (2)",
+      "ui": {
+        "width": 100,
+        "height": 50,
+        "image": {
+          "type": "asset",
+          "asset": "assets/rotate icon svg.svg"
+        },
+        "backgroundOpacity": 1,
+        "backgroundSize": "contain"
+      },
+      "order": 3.3610609324618896,
+      "parentId": "859debc2-e91d-4b1b-8744-777b4208f6d9"
+    },
+    "0ed68346-92c1-4893-92ee-87b7bc2ed9e4": {
+      "id": "0ed68346-92c1-4893-92ee-87b7bc2ed9e4",
+      "position": [
+        0.323,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "parentId": "df98c1c6-678c-4119-836d-723ee0e2fa4b",
+      "components": {},
+      "ui": {
+        "width": 70,
+        "height": 15,
+        "text": "Rotacionar Objeto",
+        "color": "#000000",
+        "fontSize": 12,
+        "type": "3d",
+        "position": "absolute",
+        "top": 73,
+        "left": 288,
+        "bottom": "",
+        "right": ""
+      },
+      "name": "Text",
+      "order": 16.034852601651302
+    },
+    "d86accc0-897b-4c45-8080-2f41ca434d62": {
+      "id": "d86accc0-897b-4c45-8080-2f41ca434d62",
+      "position": [
+        0.646,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "components": {},
+      "ui": {
+        "width": 68,
+        "height": 15,
+        "text": "Variar Escala",
+        "color": "#000000",
+        "fontSize": 12,
+        "type": "3d",
+        "position": "absolute",
+        "top": 73,
+        "left": 163,
+        "bottom": "",
+        "right": ""
+      },
+      "name": "Text (1)",
+      "order": 17.316822722162257,
+      "parentId": "ff46459e-8d97-400d-9c54-191b99eff786"
+    },
+    "b58f848b-4910-40d2-8537-9aed50714f38": {
+      "id": "b58f848b-4910-40d2-8537-9aed50714f38",
+      "position": [
+        0.9690000000000001,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "components": {},
+      "ui": {
+        "width": 68,
+        "height": 15,
+        "text": "Posicionar\nObjeto",
+        "color": "#000000",
+        "fontSize": 12,
+        "type": "3d",
+        "position": "absolute",
+        "top": 73,
+        "left": 43,
+        "bottom": "",
+        "right": ""
+      },
+      "name": "Text (2)",
+      "order": 19.229116508614386,
+      "parentId": "73f70268-3168-48df-9698-466200c7479c"
     }
   },
   "spaces": {
