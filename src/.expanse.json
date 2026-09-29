@@ -184,7 +184,7 @@
       },
       "name": "Loading Screen",
       "order": 14.596373557035621,
-      "hidden": true
+      "hidden": false
     },
     "2f4186f0-5825-4b3c-868a-24bc7945a328": {
       "id": "2f4186f0-5825-4b3c-868a-24bc7945a328",
@@ -355,7 +355,8 @@
         "stackingOrder": 2
       },
       "name": "Button",
-      "order": 13.280785398189009
+      "order": 13.280785398189009,
+      "hidden": false
     },
     "543540e1-7086-4068-a4e3-394084c146f8": {
       "id": "543540e1-7086-4068-a4e3-394084c146f8",
@@ -496,6 +497,11 @@
           "id": "f2d45bdd-f087-4224-90e4-ae28dbcde61a",
           "name": "Hide On Click",
           "parameters": {}
+        },
+        "9b1fd8a9-b14e-4c17-9fcc-457daceada01": {
+          "id": "9b1fd8a9-b14e-4c17-9fcc-457daceada01",
+          "name": "instruction-button",
+          "parameters": {}
         }
       },
       "ui": {
@@ -512,12 +518,13 @@
         "justifyContent": "center",
         "position": "absolute",
         "top": 290,
-        "left": 35,
+        "left": 19,
         "bottom": "",
         "right": ""
       },
       "name": "Button Instrução",
-      "order": 12.78747306033846
+      "order": 12.78747306033846,
+      "hidden": false
     },
     "448e3f82-f387-4286-92fb-d3ebe83b14d0": {
       "id": "448e3f82-f387-4286-92fb-d3ebe83b14d0",
@@ -644,7 +651,13 @@
       "geometry": null,
       "material": null,
       "parentId": "904308fe-98f5-4c93-bf62-f39d50c6e602",
-      "components": {},
+      "components": {
+        "4e0b89ae-78cb-4799-8a84-2e1595ee897f": {
+          "id": "4e0b89ae-78cb-4799-8a84-2e1595ee897f",
+          "name": "gestos-button",
+          "parameters": {}
+        }
+      },
       "ui": {
         "type": "3d",
         "width": 407,
@@ -656,12 +669,13 @@
         "justifyContent": "center",
         "position": "absolute",
         "top": "",
-        "left": 12,
+        "left": -16,
         "bottom": "",
         "right": ""
       },
       "name": "Gestos",
-      "order": 16.338585144774317
+      "order": 16.338585144774317,
+      "hidden": false
     },
     "73f70268-3168-48df-9698-466200c7479c": {
       "id": "73f70268-3168-48df-9698-466200c7479c",
