@@ -184,7 +184,7 @@
       },
       "name": "Loading Screen",
       "order": 14.596373557035621,
-      "hidden": true
+      "hidden": false
     },
     "2f4186f0-5825-4b3c-868a-24bc7945a328": {
       "id": "2f4186f0-5825-4b3c-868a-24bc7945a328",
@@ -420,55 +420,6 @@
       "order": 14.958687422311806,
       "ui": {
         "type": "overlay"
-      }
-    },
-    "61950102-5463-418b-86d7-d73be97d1200": {
-      "id": "61950102-5463-418b-86d7-d73be97d1200",
-      "position": [
-        0.007557187936561904,
-        0,
-        0.015737987354594418
-      ],
-      "rotation": [
-        0,
-        0,
-        0,
-        1
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "geometry": null,
-      "material": null,
-      "parentId": "b534657a-38e6-4275-a37d-77b655561d5b",
-      "components": {
-        "a2c75775-5a0f-44d7-910c-c111bc850bf6": {
-          "id": "a2c75775-5a0f-44d7-910c-c111bc850bf6",
-          "name": "position-animation",
-          "parameters": {
-            "fromY": -2,
-            "loop": false,
-            "easeOut": true,
-            "easingFunction": "Elastic",
-            "duration": 2000,
-            "toY": 0
-          }
-        }
-      },
-      "gltfModel": {
-        "src": {
-          "type": "asset",
-          "asset": "assets/batebola.glb"
-        },
-        "animationClip": "",
-        "loop": true
-      },
-      "name": "batebola.glb",
-      "order": 2.3939356983371085,
-      "shadow": {
-        "castShadow": true
       }
     },
     "9e443414-7da8-443e-9ffd-7519fc5f85fd": {
@@ -896,6 +847,55 @@
       "name": "Text (2)",
       "order": 19.229116508614386,
       "parentId": "73f70268-3168-48df-9698-466200c7479c"
+    },
+    "17ca17cf-cb42-4f55-95bb-a578f0c1e878": {
+      "id": "17ca17cf-cb42-4f55-95bb-a578f0c1e878",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "parentId": "b534657a-38e6-4275-a37d-77b655561d5b",
+      "components": {
+        "a2c75775-5a0f-44d7-910c-c111bc850bf6": {
+          "id": "a2c75775-5a0f-44d7-910c-c111bc850bf6",
+          "name": "position-animation",
+          "parameters": {
+            "fromY": -2,
+            "loop": false,
+            "easeOut": true,
+            "easingFunction": "Elastic",
+            "duration": 2000,
+            "toY": 0
+          }
+        }
+      },
+      "gltfModel": {
+        "src": {
+          "type": "asset",
+          "asset": "assets/batebola_-_Otimizado.glb"
+        },
+        "animationClip": "",
+        "loop": true
+      },
+      "name": "batebola_-_Otimizado.glb",
+      "order": 4.2335734403761975,
+      "shadow": {
+        "castShadow": true
+      }
     }
   },
   "spaces": {
