@@ -184,7 +184,7 @@
       },
       "name": "Loading Screen",
       "order": 14.596373557035621,
-      "hidden": false
+      "hidden": true
     },
     "2f4186f0-5825-4b3c-868a-24bc7945a328": {
       "id": "2f4186f0-5825-4b3c-868a-24bc7945a328",
@@ -703,10 +703,10 @@
       "ui": {
         "text": "text",
         "width": 100,
-        "height": 50,
+        "height": 49,
         "image": {
           "type": "asset",
-          "asset": "assets/swipe icon svg.svg"
+          "asset": "assets/swipe icon svg.png"
         },
         "backgroundOpacity": 1,
         "backgroundSize": "contain"
@@ -740,7 +740,7 @@
         "height": 50,
         "image": {
           "type": "asset",
-          "asset": "assets/pinch icon svg.svg"
+          "asset": "assets/pinca icone 8th wall.png"
         },
         "backgroundOpacity": 1,
         "backgroundSize": "contain"
@@ -772,10 +772,10 @@
       "name": "Icon (2)",
       "ui": {
         "width": 100,
-        "height": 50,
+        "height": 58,
         "image": {
           "type": "asset",
-          "asset": "assets/rotate icon svg.svg"
+          "asset": "assets/rotate icon 2.png"
         },
         "backgroundOpacity": 1,
         "backgroundSize": "contain"

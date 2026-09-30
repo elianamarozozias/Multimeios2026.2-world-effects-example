@@ -15,6 +15,7 @@ ecs.registerComponent({
   stateMachine: ({world, eid, schemaAttribute, defineState}) => {
     let placedEid: any = null
     let isPlaced = false
+    let firstTouchUsed = false
 
     const createParked = (spot) => {
       const newEid = world.createEntity(schemaAttribute.get(eid).prefab)
@@ -36,8 +37,15 @@ ecs.registerComponent({
     defineState('initial')
       .listen(world.events.globalId, OBJECT_RESET_EVENT, () => {
         isPlaced = false
+        firstTouchUsed = false
       })
       .listen(eid, ecs.input.SCREEN_TOUCH_START, (e) => {
+        // o primeiro toque só dispensa o botão de instrução
+        if (!firstTouchUsed) {
+          firstTouchUsed = true
+          return
+        }
+
         if (!e.data.worldPosition) {
           return
         }
