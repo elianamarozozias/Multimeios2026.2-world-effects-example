@@ -184,7 +184,7 @@
       },
       "name": "Loading Screen",
       "order": 14.596373557035621,
-      "hidden": false
+      "hidden": true
     },
     "2f4186f0-5825-4b3c-868a-24bc7945a328": {
       "id": "2f4186f0-5825-4b3c-868a-24bc7945a328",
@@ -611,7 +611,7 @@
       },
       "ui": {
         "type": "3d",
-        "width": 407,
+        "width": 416,
         "height": 84,
         "flexDirection": "row",
         "padding": "10",
@@ -688,7 +688,7 @@
       "name": "Icon (1)",
       "ui": {
         "width": 144,
-        "height": 50,
+        "height": 57,
         "image": {
           "type": "asset",
           "asset": "assets/pinca icone 8th wall.png"
@@ -757,14 +757,14 @@
       "parentId": "df98c1c6-678c-4119-836d-723ee0e2fa4b",
       "components": {},
       "ui": {
-        "width": 70,
+        "width": 80,
         "height": 15,
         "text": "Rotacionar Objeto",
         "color": "#000000",
         "fontSize": 12,
         "type": "3d",
         "position": "absolute",
-        "top": 73,
+        "top": 80,
         "left": 294,
         "bottom": "",
         "right": ""
@@ -794,14 +794,14 @@
       "material": null,
       "components": {},
       "ui": {
-        "width": 68,
-        "height": 15,
-        "text": "Variar Escala",
+        "width": 80,
+        "height": 23,
+        "text": "Variar \nEscala",
         "color": "#000000",
         "fontSize": 12,
         "type": "3d",
         "position": "absolute",
-        "top": 73,
+        "top": 78,
         "left": 174,
         "bottom": "",
         "right": ""
@@ -832,14 +832,14 @@
       "material": null,
       "components": {},
       "ui": {
-        "width": 68,
+        "width": 80,
         "height": 15,
         "text": "Posicionar\nObjeto",
         "color": "#000000",
         "fontSize": 12,
         "type": "3d",
         "position": "absolute",
-        "top": 73,
+        "top": 76,
         "left": 48,
         "bottom": "",
         "right": ""
@@ -896,6 +896,97 @@
       "shadow": {
         "castShadow": true
       }
+    },
+    "c24fb448-2349-4c58-aa14-21f7ea01481f": {
+      "id": "c24fb448-2349-4c58-aa14-21f7ea01481f",
+      "position": [
+        -9.546973370717888,
+        -17.058059801097308,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "parentId": "904308fe-98f5-4c93-bf62-f39d50c6e602",
+      "components": {
+        "9a567695-8b9a-4211-b29f-b05e8e33c59b": {
+          "id": "9a567695-8b9a-4211-b29f-b05e8e33c59b",
+          "name": "audio-button",
+          "parameters": {}
+        }
+      },
+      "ui": {
+        "type": "3d",
+        "width": 45,
+        "height": 45,
+        "background": "#969696",
+        "borderRadius": 18,
+        "flexDirection": "row",
+        "backgroundOpacity": 0.5,
+        "padding": "10",
+        "gap": "6",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "position": "absolute",
+        "top": "",
+        "left": "",
+        "bottom": 21,
+        "right": 328
+      },
+      "name": "Audio Button",
+      "order": 10.55644443282546,
+      "audio": {
+        "src": {
+          "type": "asset",
+          "asset": "assets/audio teste.mp3"
+        },
+        "paused": true
+      }
+    },
+    "7ede137c-b032-45fe-8fdd-230531d0385d": {
+      "id": "7ede137c-b032-45fe-8fdd-230531d0385d",
+      "position": [
+        -0.323,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "parentId": "c24fb448-2349-4c58-aa14-21f7ea01481f",
+      "components": {},
+      "name": "Icon",
+      "ui": {
+        "width": 16,
+        "height": 16,
+        "image": {
+          "type": "asset",
+          "asset": "assets/audio icone.png"
+        },
+        "backgroundOpacity": 0.75,
+        "backgroundSize": "contain"
+      },
+      "order": 0.0236114174935671
     }
   },
   "spaces": {
