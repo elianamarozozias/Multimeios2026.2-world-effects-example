@@ -17,9 +17,10 @@ const IMG = {
 const TEXTO_INSTRUCAO = 'Clique em uma zona plana para inserir o artefato 3D'
 const TEXTO_BOTAO = 'Reposicionar'
 
-// ícones do botão de áudio (desenhados aqui, não precisam de imagem)
+// ícones desenhados aqui, não precisam de imagem
 const ICONE_PLAY = `<svg viewBox="0 0 24 24" width="55%" height="55%" fill="#fff"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/><path d="M14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>`
 const ICONE_STOP = `<svg viewBox="0 0 24 24" width="45%" height="45%" fill="#fff"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>`
+const ICONE_ANIMAR = `<svg viewBox="0 0 24 24" width="55%" height="55%" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3"/></svg>`
 
 const CSS = `
   #hud * { box-sizing: border-box; }
@@ -50,11 +51,20 @@ const CSS = `
     background: #F00; color: #fff; border: none; border-radius: 14px;
     font-size: clamp(14px, 4vw, 20px); padding: clamp(10px, 3vw, 16px) clamp(16px, 5vw, 26px); }
 
-  #hud-audio { position: absolute; pointer-events: auto; touch-action: manipulation;
-    left: max(16px, env(safe-area-inset-left)); bottom: max(20px, env(safe-area-inset-bottom));
+  #hud-audio, #hud-animar { position: absolute; pointer-events: auto; touch-action: manipulation;
+    bottom: max(20px, env(safe-area-inset-bottom));
     width: clamp(52px, 14vw, 72px); aspect-ratio: 1; border-radius: 50%; border: none; padding: 0;
     background: #3F1240; display: flex; align-items: center; justify-content: center;
     box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+  #hud-audio { left: max(16px, env(safe-area-inset-left)); }
+  #hud-animar { left: calc(max(16px, env(safe-area-inset-left)) + clamp(62px, 17vw, 86px)); }
+
+  #hud-nome { position: absolute; left: 50%; transform: translateX(-50%);
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + clamp(62px, 17vw, 86px));
+    color: #fff; font-size: clamp(14px, 4vw, 20px); text-shadow: 0 1px 4px #000;
+    background: rgba(0,0,0,.45); padding: 6px 14px; border-radius: 20px;
+    opacity: 0; transition: opacity .25s; }
+  #hud-nome.visivel { opacity: 1; }
 `
 
 // liga um botão do HTML a uma função, funcionando em Android e iPhone
@@ -113,7 +123,9 @@ ecs.registerComponent({
         <b>OK</b>
       </div>
 
+      <div id="hud-nome"></div>
       <button id="hud-audio" class="escondido">${ICONE_PLAY}</button>
+      <button id="hud-animar" class="escondido">${ICONE_ANIMAR}</button>
       <button id="hud-reset" class="escondido">${TEXTO_BOTAO}</button>
     `
     document.body.appendChild(hud)
@@ -152,6 +164,25 @@ ecs.registerComponent({
       else pararAudio()
     })
 
+    // ---------- botão Animar: cada clique roda a próxima animação ----------
+    const nome = el('hud-nome')
+    let timerNome: any = null
+    world.events.addListener(world.events.globalId, 'anim-name', (e: any) => {
+      nome.textContent = e.data?.nome || ''
+      nome.classList.add('visivel')
+      clearTimeout(timerNome)
+      timerNome = setTimeout(() => nome.classList.remove('visivel'), 1800)
+    })
+
+    const pararAnimacao = () => {
+      world.events.dispatch(world.events.globalId, 'anim-stop')
+      nome.classList.remove('visivel')
+    }
+
+    ligarBotao(el('hud-animar'), () => {
+      world.events.dispatch(world.events.globalId, 'anim-next')
+    })
+
     // ---------- botão Reposicionar ----------
     ligarBotao(el('hud-reset'), () => {
       console.log('[HUD] reposicionar clicado')
@@ -169,22 +200,25 @@ ecs.registerComponent({
     defineState('instrucao')
       .onEnter(() => {
         pararAudio()
+        pararAnimacao()
         esconder('hud-loading')
         esconder('hud-gestos')
         esconder('hud-reset')
+        esconder('hud-animar')
         esconder('hud-audio')
         mostrar('hud-instrucao')
       })
       .listen(world.events.globalId, ecs.input.SCREEN_TOUCH_START, () => esconder('hud-instrucao'))
       .onEvent(OBJECT_PLACED_EVENT, 'colocado', {target: world.events.globalId})
 
-    // 3) objeto colocado: gestos + reposicionar + áudio
+    // 3) objeto colocado: gestos + animar + reposicionar + áudio
     defineState('colocado')
       .onEnter(() => {
         esconder('hud-loading')
         esconder('hud-instrucao')
         mostrar('hud-gestos')
         mostrar('hud-reset')
+        mostrar('hud-animar')
         if (audio) mostrar('hud-audio')
       })
       .onEvent('hud-reset-click', 'resetando', {target: world.events.globalId})
@@ -194,7 +228,9 @@ ecs.registerComponent({
       .wait(1000, 'instrucao')
       .onEnter(() => {
         pararAudio()
+        pararAnimacao()
         esconder('hud-reset')
+        esconder('hud-animar')
         esconder('hud-gestos')
         esconder('hud-audio')
         const tempVector = ecs.math.vec3.zero()

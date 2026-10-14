@@ -257,6 +257,13 @@
             "duration": 2000,
             "toY": 0
           }
+        },
+        "c45a025e-649f-494b-a77c-cb491122b6a7": {
+          "id": "c45a025e-649f-494b-a77c-cb491122b6a7",
+          "name": "animar",
+          "parameters": {
+            "intensidade": 2
+          }
         }
       },
       "gltfModel": {
