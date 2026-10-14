@@ -224,8 +224,41 @@
       "name": "Hider",
       "order": 7.322553197845954
     },
-    "17ca17cf-cb42-4f55-95bb-a578f0c1e878": {
-      "id": "17ca17cf-cb42-4f55-95bb-a578f0c1e878",
+    "fc5e9884-4c65-4dbc-af90-3866038c9135": {
+      "id": "fc5e9884-4c65-4dbc-af90-3866038c9135",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": null,
+      "material": null,
+      "parentId": "84028e73-ee70-412d-b8d4-c09bf07c655c",
+      "components": {
+        "b1009f8f-005c-4db5-a326-a185e8421037": {
+          "id": "b1009f8f-005c-4db5-a326-a185e8421037",
+          "name": "hud-html",
+          "parameters": {
+            "audio": "assets/carnaval.mp3"
+          }
+        }
+      },
+      "name": "Empty Object",
+      "order": 8.368439045216672
+    },
+    "2a3b3d33-cc32-40e0-a101-785d46f477a4": {
+      "id": "2a3b3d33-cc32-40e0-a101-785d46f477a4",
       "position": [
         0,
         0,
@@ -262,49 +295,16 @@
       "gltfModel": {
         "src": {
           "type": "asset",
-          "asset": "assets/batebola_-_Otimizado.glb"
+          "asset": "assets/batebola.glb"
         },
         "animationClip": "",
         "loop": true
       },
-      "name": "batebola_-_Otimizado.glb",
-      "order": 4.2335734403761975,
+      "name": "batebola.glb",
+      "order": 5.445312429587526,
       "shadow": {
         "castShadow": true
       }
-    },
-    "fc5e9884-4c65-4dbc-af90-3866038c9135": {
-      "id": "fc5e9884-4c65-4dbc-af90-3866038c9135",
-      "position": [
-        0,
-        0,
-        0
-      ],
-      "rotation": [
-        0,
-        0,
-        0,
-        1
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "geometry": null,
-      "material": null,
-      "parentId": "84028e73-ee70-412d-b8d4-c09bf07c655c",
-      "components": {
-        "b1009f8f-005c-4db5-a326-a185e8421037": {
-          "id": "b1009f8f-005c-4db5-a326-a185e8421037",
-          "name": "hud-html",
-          "parameters": {
-            "audio": "assets/dogbarking.mp3"
-          }
-        }
-      },
-      "name": "Empty Object",
-      "order": 8.368439045216672
     }
   },
   "spaces": {
