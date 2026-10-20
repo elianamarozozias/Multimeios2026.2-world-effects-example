@@ -264,8 +264,8 @@
       ],
       "scale": [
         1,
-        1,
-        1
+        0.9999999999999998,
+        0.9999999999999998
       ],
       "geometry": null,
       "material": null,
@@ -276,22 +276,21 @@
           "name": "animar",
           "parameters": {}
         },
-        "be36a85f-c5ae-4b0c-943b-7bb4b0690f77": {
-          "id": "be36a85f-c5ae-4b0c-943b-7bb4b0690f77",
-          "name": "position-animation",
-          "parameters": {
-            "autoFrom": true,
-            "toZ": 2,
-            "loop": false
-          }
-        },
         "0717b54c-e1a5-4fa0-8d82-8494c1d9617f": {
           "id": "0717b54c-e1a5-4fa0-8d82-8494c1d9617f",
           "name": "rotate-animation",
           "parameters": {
-            "autoFrom": true,
-            "toY": 180,
-            "loop": false
+            "autoFrom": false,
+            "toY": 0,
+            "loop": true,
+            "duration": 1000,
+            "toX": 0,
+            "reverse": true,
+            "fromZ": 30,
+            "toZ": -30,
+            "easeIn": true,
+            "easeOut": true,
+            "easingFunction": "Quadratic"
           }
         },
         "e23c4344-5612-4aee-a61b-5ee1a76bffc7": {
