@@ -130,6 +130,7 @@ ecs.registerComponent({
     const audio = caminhoAudio ? new Audio(encodeURI(caminhoAudio)) : null
     if (audio) audio.preload = 'auto'
     const botaoAudio = el('hud-audio')
+    let audioLiberado = false
 
     const pararAudio = () => {
       if (!audio) return
@@ -137,28 +138,46 @@ ecs.registerComponent({
       audio.currentTime = 0
       botaoAudio.innerHTML = ICONE_PLAY
     }
+
     const tocarAudio = () => {
       if (!audio) return
       audio.volume = 1
       audio.currentTime = 0
-      audio.play().catch((err) => console.log('[HUD] não tocou o áudio:', err))
+      audio.play()
+        .then(() => { audioLiberado = true })
+        .catch((err) => {
+          console.log('[HUD] não tocou o áudio:', err)
+          // o destravamento pode ainda estar em andamento; tenta de novo
+          setTimeout(() => { audio.play().catch(() => {}) }, 200)
+        })
       botaoAudio.innerHTML = ICONE_STOP
     }
+
     if (audio) audio.addEventListener('ended', pararAudio)
 
-    // destrava o áudio no primeiro toque da tela (exigência do iPhone).
+    // destrava o áudio em qualquer toque da tela (exigência do iPhone).
     // o volume vai a zero antes do play para não escapar nenhum som.
-    let audioLiberado = false
     const liberarAudio = () => {
       if (!audio || audioLiberado) return
-      audioLiberado = true
       audio.volume = 0
       audio.play().then(() => {
         audio.pause()
         audio.currentTime = 0
         audio.volume = 1
+        audioLiberado = true
       }).catch(() => { audio.volume = 1 })
     }
+
+    // tenta destravar no primeiro toque, aconteça onde acontecer
+    const destravarNoPrimeiroToque = () => {
+      liberarAudio()
+      if (audioLiberado) {
+        document.removeEventListener('touchstart', destravarNoPrimeiroToque)
+        document.removeEventListener('pointerdown', destravarNoPrimeiroToque)
+      }
+    }
+    document.addEventListener('touchstart', destravarNoPrimeiroToque)
+    document.addEventListener('pointerdown', destravarNoPrimeiroToque)
 
     // o play() fica direto no toque, que é o que o iPhone exige pra liberar som
     ligarBotao(botaoAudio, () => {
@@ -192,7 +211,7 @@ ecs.registerComponent({
       })
       .listen(world.events.globalId, ecs.input.SCREEN_TOUCH_START, () => {
         esconder('hud-instrucao')
-        liberarAudio()   // aproveita o toque para destravar o som, em silêncio
+        liberarAudio()
       })
       .onEvent(OBJECT_PLACED_EVENT, 'colocado', {target: world.events.globalId})
 
