@@ -286,8 +286,8 @@
             "duration": 1000,
             "toX": 0,
             "reverse": true,
-            "fromZ": 30,
-            "toZ": -30,
+            "fromZ": 25,
+            "toZ": -25,
             "easeIn": true,
             "easeOut": true,
             "easingFunction": "Quadratic"
