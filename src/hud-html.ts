@@ -139,11 +139,26 @@ ecs.registerComponent({
     }
     const tocarAudio = () => {
       if (!audio) return
+      audio.volume = 1
       audio.currentTime = 0
       audio.play().catch((err) => console.log('[HUD] não tocou o áudio:', err))
       botaoAudio.innerHTML = ICONE_STOP
     }
     if (audio) audio.addEventListener('ended', pararAudio)
+
+    // destrava o áudio no primeiro toque da tela (exigência do iPhone).
+    // o volume vai a zero antes do play para não escapar nenhum som.
+    let audioLiberado = false
+    const liberarAudio = () => {
+      if (!audio || audioLiberado) return
+      audioLiberado = true
+      audio.volume = 0
+      audio.play().then(() => {
+        audio.pause()
+        audio.currentTime = 0
+        audio.volume = 1
+      }).catch(() => { audio.volume = 1 })
+    }
 
     // o play() fica direto no toque, que é o que o iPhone exige pra liberar som
     ligarBotao(botaoAudio, () => {
@@ -175,17 +190,24 @@ ecs.registerComponent({
         esconder('hud-audio')
         mostrar('hud-instrucao')
       })
-      .listen(world.events.globalId, ecs.input.SCREEN_TOUCH_START, () => esconder('hud-instrucao'))
+      .listen(world.events.globalId, ecs.input.SCREEN_TOUCH_START, () => {
+        esconder('hud-instrucao')
+        liberarAudio()   // aproveita o toque para destravar o som, em silêncio
+      })
       .onEvent(OBJECT_PLACED_EVENT, 'colocado', {target: world.events.globalId})
 
     // 3) objeto colocado: gestos + reposicionar + áudio
+    //    o som começa junto com a inserção do objeto
     defineState('colocado')
       .onEnter(() => {
         esconder('hud-loading')
         esconder('hud-instrucao')
         mostrar('hud-gestos')
         mostrar('hud-reset')
-        if (audio) mostrar('hud-audio')
+        if (audio) {
+          mostrar('hud-audio')
+          tocarAudio()
+        }
       })
       .onEvent('hud-reset-click', 'resetando', {target: world.events.globalId})
 

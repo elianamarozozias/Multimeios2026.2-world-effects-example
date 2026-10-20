@@ -51,6 +51,7 @@ ecs.registerComponent({
       })
     }
 
+    // devolve o objeto ao transform de repouso
     const restaurar = () => {
       try {
         world.transform.setLocalPosition(eid, p0)
@@ -69,17 +70,40 @@ ecs.registerComponent({
       })
     }
 
+    // tira as animações de cima do objeto, deixando-o onde está
+    const limpar = () => {
+      COMPONENTES.forEach((nome) => {
+        if (!config[nome]) return
+        try { (ecs as any)[nome].remove(world, eid) } catch (e) {}
+      })
+    }
+
     // rede de segurança enquanto o objeto ainda está fora de vista
     const vigia = setInterval(() => { capturar(); restaurar() }, 100)
     const pararVigia = () => clearInterval(vigia)
     setTimeout(pararVigia, 4000)
 
+    const pegou = () => world.events.dispatch(eid, 'pegou')
+
     // espera o objeto ser inserido na cena para soltar as animações
     defineState('esperando')
       .initial()
+      .onEnter(() => { limpar(); restaurar() })
       .onEvent('object-placed', 'animando', {target: world.events.globalId})
 
+    // animação rodando
     defineState('animando')
       .onEnter(() => { pararVigia(); restaurar(); tocar() })
+      // encostar no objeto ou dar uma pinça interrompe a animação:
+      // manipular ganha de animar, senão os dois disputam a posição
+      .listen(eid, ecs.input.SCREEN_TOUCH_START, pegou)
+      .listen(world.events.globalId, ecs.input.GESTURE_START, pegou)
+      .onEvent('pegou', 'manipulando')
+      .onEvent('object-reset', 'esperando', {target: world.events.globalId})
+
+    // usuário no controle: sem animação, objeto fica onde ele deixar
+    defineState('manipulando')
+      .onEnter(limpar)
+      .onEvent('object-reset', 'esperando', {target: world.events.globalId})
   },
 })
