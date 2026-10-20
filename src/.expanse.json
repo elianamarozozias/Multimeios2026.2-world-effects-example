@@ -279,16 +279,27 @@
       "material": null,
       "parentId": "b534657a-38e6-4275-a37d-77b655561d5b",
       "components": {
-        "a2c75775-5a0f-44d7-910c-c111bc850bf6": {
-          "id": "a2c75775-5a0f-44d7-910c-c111bc850bf6",
+        "4a706344-b8bc-4f69-bd38-d4120161aae3": {
+          "id": "4a706344-b8bc-4f69-bd38-d4120161aae3",
+          "name": "animar",
+          "parameters": {}
+        },
+        "be36a85f-c5ae-4b0c-943b-7bb4b0690f77": {
+          "id": "be36a85f-c5ae-4b0c-943b-7bb4b0690f77",
           "name": "position-animation",
           "parameters": {
-            "fromY": -2,
-            "loop": false,
-            "easeOut": true,
-            "easingFunction": "Elastic",
-            "duration": 2000,
-            "toY": 0
+            "autoFrom": true,
+            "toZ": 2,
+            "loop": false
+          }
+        },
+        "0717b54c-e1a5-4fa0-8d82-8494c1d9617f": {
+          "id": "0717b54c-e1a5-4fa0-8d82-8494c1d9617f",
+          "name": "rotate-animation",
+          "parameters": {
+            "autoFrom": true,
+            "toY": 180,
+            "loop": false
           }
         }
       },
