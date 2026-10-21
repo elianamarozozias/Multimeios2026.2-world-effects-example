@@ -125,65 +125,71 @@ ecs.registerComponent({
     // seguro: se em 8s não liberou, tira o loading da frente (iPhone)
     setTimeout(() => esconder('hud-loading'), 8000)
 
-    // ---------- áudio ----------
+    // ---------- áudio (Web Audio API) ----------
+    // o elemento <audio> precisa de permissão a cada play, e isso falha quando
+    // o play não sai direto de um toque. O AudioContext é destravado uma vez
+    // no primeiro toque e depois toca quando quiser, sem pedir mais nada.
     const caminhoAudio = (schemaAttribute.get(eid).audio || '').trim()
-    const audio = caminhoAudio ? new Audio(encodeURI(caminhoAudio)) : null
-    if (audio) audio.preload = 'auto'
     const botaoAudio = el('hud-audio')
-    let audioLiberado = false
+
+    const AC = (window as any).AudioContext || (window as any).webkitAudioContext
+    const ctx = AC ? new AC() : null
+    let buffer: AudioBuffer | null = null
+    let fonte: AudioBufferSourceNode | null = null
+    let tocando = false
+    let pendente = false   // pediram para tocar antes do arquivo ficar pronto
 
     const pararAudio = () => {
-      if (!audio) return
-      audio.pause()
-      audio.currentTime = 0
+      if (fonte) {
+        try { fonte.stop() } catch (e) {}
+        fonte = null
+      }
+      pendente = false
+      tocando = false
       botaoAudio.innerHTML = ICONE_PLAY
     }
 
     const tocarAudio = () => {
-      if (!audio) return
-      audio.volume = 1
-      audio.currentTime = 0
-      audio.play()
-        .then(() => { audioLiberado = true })
-        .catch((err) => {
-          console.log('[HUD] não tocou o áudio:', err)
-          // o destravamento pode ainda estar em andamento; tenta de novo
-          setTimeout(() => { audio.play().catch(() => {}) }, 200)
-        })
+      if (!ctx) return
+      // na primeira execução o arquivo ainda pode estar baixando:
+      // marca o pedido e toca assim que ele ficar pronto
+      if (!buffer) { pendente = true; return }
+      pararAudio()
+      fonte = ctx.createBufferSource()
+      fonte.buffer = buffer
+      fonte.connect(ctx.destination)
+      fonte.onended = () => { if (tocando) pararAudio() }
+      fonte.start(0)
+      tocando = true
       botaoAudio.innerHTML = ICONE_STOP
     }
 
-    if (audio) audio.addEventListener('ended', pararAudio)
-
-    // destrava o áudio em qualquer toque da tela (exigência do iPhone).
-    // o volume vai a zero antes do play para não escapar nenhum som.
-    const liberarAudio = () => {
-      if (!audio || audioLiberado) return
-      audio.volume = 0
-      audio.play().then(() => {
-        audio.pause()
-        audio.currentTime = 0
-        audio.volume = 1
-        audioLiberado = true
-      }).catch(() => { audio.volume = 1 })
+    // baixa e decodifica o arquivo uma vez
+    if (ctx && caminhoAudio) {
+      fetch(encodeURI(caminhoAudio))
+        .then((r) => r.arrayBuffer())
+        .then((dados) => ctx.decodeAudioData(dados))
+        .then((b) => {
+          buffer = b
+          console.log('[HUD] áudio pronto')
+          if (pendente) { pendente = false; tocarAudio() }
+        })
+        .catch((err) => console.log('[HUD] erro carregando áudio:', err))
     }
 
-    // tenta destravar no primeiro toque, aconteça onde acontecer
-    const destravarNoPrimeiroToque = () => {
-      liberarAudio()
-      if (audioLiberado) {
-        document.removeEventListener('touchstart', destravarNoPrimeiroToque)
-        document.removeEventListener('pointerdown', destravarNoPrimeiroToque)
-      }
+    // destrava o contexto no primeiro toque da tela — vale para a sessão toda
+    const destravar = () => {
+      if (!ctx) return
+      if (ctx.state === 'suspended') ctx.resume()
+      document.removeEventListener('touchstart', destravar)
+      document.removeEventListener('pointerdown', destravar)
     }
-    document.addEventListener('touchstart', destravarNoPrimeiroToque)
-    document.addEventListener('pointerdown', destravarNoPrimeiroToque)
+    document.addEventListener('touchstart', destravar)
+    document.addEventListener('pointerdown', destravar)
 
-    // o play() fica direto no toque, que é o que o iPhone exige pra liberar som
     ligarBotao(botaoAudio, () => {
-      if (!audio) return
-      if (audio.paused) tocarAudio()
-      else pararAudio()
+      if (tocando || pendente) pararAudio()
+      else tocarAudio()
     })
 
     // ---------- botão Reposicionar ----------
@@ -211,19 +217,18 @@ ecs.registerComponent({
       })
       .listen(world.events.globalId, ecs.input.SCREEN_TOUCH_START, () => {
         esconder('hud-instrucao')
-        liberarAudio()
+        destravar()
       })
       .onEvent(OBJECT_PLACED_EVENT, 'colocado', {target: world.events.globalId})
 
-    // 3) objeto colocado: gestos + reposicionar + áudio
-    //    o som começa junto com a inserção do objeto
+    // 3) objeto colocado: gestos + reposicionar + áudio tocando sozinho
     defineState('colocado')
       .onEnter(() => {
         esconder('hud-loading')
         esconder('hud-instrucao')
         mostrar('hud-gestos')
         mostrar('hud-reset')
-        if (audio) {
+        if (ctx) {
           mostrar('hud-audio')
           tocarAudio()
         }
@@ -264,7 +269,6 @@ ecs.registerComponent({
       })
   },
   remove: () => {
-    document.querySelectorAll('#hud audio').forEach((a: any) => a.pause())
     document.getElementById('hud')?.remove()
     document.getElementById('hud-style')?.remove()
   },
