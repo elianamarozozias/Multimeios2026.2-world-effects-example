@@ -25,12 +25,9 @@ ecs.registerComponent({
     const config: {[nome: string]: any} = {}
 
     const p0 = {x: 0, y: 0, z: 0}
-    const s0 = {x: 1, y: 1, z: 1}
 
     try {
       world.transform.getLocalPosition(eid, p0 as any)
-      const s = ecs.Scale.get(world, eid)
-      s0.x = s.x; s0.y = s.y; s0.z = s.z
     } catch (e) {}
 
     // guarda o que o aluno configurou e tira a animação do objeto,
@@ -51,11 +48,13 @@ ecs.registerComponent({
       })
     }
 
-    // devolve o objeto ao transform de repouso
+    // devolve posição e rotação ao repouso.
+    // a ESCALA não é tocada de propósito: é o aluno quem a define no
+    // inspector do GLB, e mexer nela aqui quebraria o tamanho do objeto
+    // e a referência do gesto de pinça.
     const restaurar = () => {
       try {
         world.transform.setLocalPosition(eid, p0)
-        ecs.Scale.set(world, eid, {x: s0.x, y: s0.y, z: s0.z})
         ecs.Quaternion.set(world, eid, {x: 0, y: 0, z: 0, w: 1})
       } catch (e) {}
     }

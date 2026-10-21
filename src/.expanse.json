@@ -263,9 +263,9 @@
         1
       ],
       "scale": [
-        1,
-        0.9999999999999998,
-        0.9999999999999998
+        2,
+        1.9999999999999998,
+        1.9999999999999998
       ],
       "geometry": null,
       "material": null,
@@ -297,8 +297,8 @@
           "id": "e23c4344-5612-4aee-a61b-5ee1a76bffc7",
           "name": "pinch-scale",
           "parameters": {
-            "maxScale": 3000,
-            "minScale": 1
+            "maxScale": 30000,
+            "minScale": 0
           }
         }
       },
