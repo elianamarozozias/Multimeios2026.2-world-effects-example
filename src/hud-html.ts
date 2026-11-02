@@ -18,8 +18,10 @@ const TEXTO_INSTRUCAO = 'Clique em uma zona plana para inserir o artefato 3D'
 const TEXTO_BOTAO = 'Reposicionar'
 const TEXTO_CARREGANDO = 'Carregando...'
 
-// se em 25s nada carregou, libera assim mesmo para não travar a experiência
-const LIMITE_CARREGAMENTO = 25000
+// a tela de carregamento espera a rede ficar quieta por este tempo
+const SILENCIO_REDE = 1200
+// e nunca passa disto, para não travar a experiência
+const LIMITE_CARREGAMENTO = 30000
 
 // ícones do botão de áudio (desenhados aqui, não precisam de imagem)
 const ICONE_PLAY = `<svg viewBox="0 0 24 24" width="55%" height="55%" fill="#fff"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/><path d="M14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>`
@@ -35,7 +37,7 @@ const CSS = `
     font-size: clamp(16px, 4.5vw, 24px); }
   #hud-barra { width: min(70vw, 320px); height: 6px; border-radius: 3px;
     background: rgba(255,255,255,.25); overflow: hidden; }
-  #hud-barra div { height: 100%; width: 0%; background: #fff; transition: width .25s; }
+  #hud-barra div { height: 100%; width: 0%; background: #fff; transition: width .4s linear; }
 
   #hud-gestos { position: absolute; left: 50%; transform: translateX(-50%);
     top: max(14px, env(safe-area-inset-top)); display: flex; gap: 3vw; }
@@ -86,15 +88,11 @@ const ligarBotao = (botao: HTMLElement, acao: () => void) => {
 ecs.registerComponent({
   name: 'hud-html',
   schema: {
-    // ⬇️ caminho do áudio, como aparece em src/assets
+    // ⬇️ caminho do áudio, como aparece em src/assets. Deixe vazio se não tiver.
     audio: ecs.string,
-    // ⬇️ caminho do(s) modelo(s) 3D. Vários, separados por vírgula.
-    //    A tela de carregamento só sai quando eles terminarem de baixar.
-    modelos: ecs.string,
   },
   schemaDefaults: {
     audio: 'assets/audio.mp3',
-    modelos: 'assets/modelo.glb',
   },
   stateMachine: ({world, eid, schemaAttribute, defineState}) => {
     // ---------- monta o HTML ----------
@@ -139,54 +137,69 @@ ecs.registerComponent({
     const barra = hud.querySelector('#hud-barra div') as HTMLElement
 
     // ---------- carregamento ----------
-    // a tela só sai quando a realidade estiver pronta E os modelos baixados.
-    // o fetch coloca o arquivo no cache do navegador, então quando o 8th Wall
-    // for carregar o GLB ele aparece instantaneamente.
+    // não é preciso dizer quais modelos existem: o HUD observa a rede.
+    // enquanto houver download em andamento, a tela segura. Quando a rede
+    // fica quieta E a realidade está pronta, libera. Vale para qualquer
+    // quantidade de GLB, textura ou áudio dentro do prefab.
     let realidadePronta = false
-    let modelosProntos = false
     let liberado = false
+    let emVoo = 0            // requisições em andamento
+    let ultimaAtividade = Date.now()
+    const inicio = Date.now()
 
     const liberar = () => {
       if (liberado) return
-      if (!realidadePronta || !modelosProntos) return
       liberado = true
+      clearInterval(vigia)
+      barra.style.width = '100%'
       world.events.dispatch(eid, 'tudo-pronto')
     }
 
-    const listaModelos = (schemaAttribute.get(eid).modelos || '')
-      .split(',')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0)
-
-    if (listaModelos.length === 0) {
-      modelosProntos = true
-    } else {
-      let prontos = 0
-      listaModelos.forEach((caminho) => {
-        fetch(encodeURI(caminho))
-          .then((r) => r.blob())
-          .catch((err) => console.log('[HUD] erro baixando', caminho, err))
-          .then(() => {
-            prontos += 1
-            barra.style.width = `${Math.round((prontos / listaModelos.length) * 100)}%`
-            if (prontos >= listaModelos.length) {
-              console.log('[HUD] modelos prontos')
-              modelosProntos = true
-              liberar()
-            }
-          })
+    // envolve o fetch do navegador para contar o que está baixando
+    const fetchOriginal = window.fetch.bind(window)
+    window.fetch = function (...args: any[]) {
+      emVoo += 1
+      ultimaAtividade = Date.now()
+      return (fetchOriginal as any)(...args).finally(() => {
+        emVoo -= 1
+        ultimaAtividade = Date.now()
       })
+    } as any
+
+    // o mesmo para XMLHttpRequest, que alguns carregadores usam
+    const XHR = (window as any).XMLHttpRequest
+    if (XHR && XHR.prototype && XHR.prototype.send) {
+      const sendOriginal = XHR.prototype.send
+      XHR.prototype.send = function (...args: any[]) {
+        emVoo += 1
+        ultimaAtividade = Date.now()
+        const encerrar = () => {
+          emVoo -= 1
+          ultimaAtividade = Date.now()
+        }
+        this.addEventListener('loadend', encerrar, {once: true})
+        return sendOriginal.apply(this, args)
+      }
     }
 
-    // rede de segurança: nunca deixa o usuário preso na tela preta
-    setTimeout(() => {
-      if (!liberado) {
-        console.log('[HUD] tempo limite: liberando mesmo sem terminar')
-        realidadePronta = true
-        modelosProntos = true
+    const vigia = setInterval(() => {
+      const decorrido = Date.now() - inicio
+      const parado = Date.now() - ultimaAtividade
+
+      // barra de progresso aproximada: cresce com o tempo, trava em 90%
+      const pct = Math.min(90, Math.round((decorrido / 8000) * 90))
+      if (!liberado) barra.style.width = `${pct}%`
+
+      if (decorrido > LIMITE_CARREGAMENTO) {
+        console.log('[HUD] tempo limite: liberando mesmo assim')
+        liberar()
+        return
+      }
+      if (realidadePronta && emVoo === 0 && parado > SILENCIO_REDE) {
+        console.log('[HUD] rede quieta, tudo carregado')
         liberar()
       }
-    }, LIMITE_CARREGAMENTO)
+    }, 200)
 
     // ---------- áudio (Web Audio API) ----------
     // o elemento <audio> precisa de permissão a cada play, e isso falha quando
@@ -262,12 +275,12 @@ ecs.registerComponent({
     })
 
     // ---------- estados ----------
-    // 1) carregando: espera a realidade E os modelos
+    // 1) carregando: espera a realidade e o fim dos downloads
     defineState('carregando')
       .initial()
       .listen(world.events.globalId, ecs.events.REALITY_READY, () => {
         realidadePronta = true
-        liberar()
+        ultimaAtividade = Date.now()
       })
       .onEvent('tudo-pronto', 'instrucao')
 
