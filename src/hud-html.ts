@@ -3,6 +3,8 @@ import {Logo} from './logo'
 import {OBJECT_PLACED_EVENT, OBJECT_RESET_EVENT} from './tap-to-place'
 
 const logoQuery = ecs.defineQuery([Logo])
+// todas as entidades que têm um modelo 3D, inclusive as de dentro do prefab
+const modeloQuery = ecs.defineQuery([ecs.GltfModel])
 
 // ⬇️ TROCAR pelos caminhos das imagens deste projeto (como aparecem em src/assets)
 const IMG = {
@@ -18,9 +20,9 @@ const TEXTO_INSTRUCAO = 'Clique em uma zona plana para inserir o artefato 3D'
 const TEXTO_BOTAO = 'Reposicionar'
 const TEXTO_CARREGANDO = 'Carregando...'
 
-// a tela de carregamento espera a rede ficar quieta por este tempo
-const SILENCIO_REDE = 1200
-// e nunca passa disto, para não travar a experiência
+// tempo que o HUD espera para a cena terminar de montar o prefab
+const ESPERA_CENA = 1500
+// limite para não travar a experiência se algo der errado
 const LIMITE_CARREGAMENTO = 30000
 
 // ícones do botão de áudio (desenhados aqui, não precisam de imagem)
@@ -37,7 +39,7 @@ const CSS = `
     font-size: clamp(16px, 4.5vw, 24px); }
   #hud-barra { width: min(70vw, 320px); height: 6px; border-radius: 3px;
     background: rgba(255,255,255,.25); overflow: hidden; }
-  #hud-barra div { height: 100%; width: 0%; background: #fff; transition: width .4s linear; }
+  #hud-barra div { height: 100%; width: 0%; background: #fff; transition: width .3s linear; }
 
   #hud-gestos { position: absolute; left: 50%; transform: translateX(-50%);
     top: max(14px, env(safe-area-inset-top)); display: flex; gap: 3vw; }
@@ -137,67 +139,75 @@ ecs.registerComponent({
     const barra = hud.querySelector('#hud-barra div') as HTMLElement
 
     // ---------- carregamento ----------
-    // não é preciso dizer quais modelos existem: o HUD observa a rede.
-    // enquanto houver download em andamento, a tela segura. Quando a rede
-    // fica quieta E a realidade está pronta, libera. Vale para qualquer
-    // quantidade de GLB, textura ou áudio dentro do prefab.
+    // o aluno não precisa listar nada: o HUD pergunta à cena quais modelos 3D
+    // existem (inclusive dentro do prefab) e baixa cada um. A tela só sai
+    // quando TODOS os downloads que ele mesmo iniciou terminarem.
     let realidadePronta = false
     let liberado = false
-    let emVoo = 0            // requisições em andamento
-    let ultimaAtividade = Date.now()
+    let pedidos = 0
+    let concluidos = 0
+    let cenaEstavel = 0          // ciclos seguidos sem achar modelo novo
     const inicio = Date.now()
+    const jaBaixados = new Set<string>()
 
-    const liberar = () => {
+    const atualizarBarra = () => {
+      if (liberado) return
+      const pct = pedidos === 0 ? 5 : Math.round((concluidos / pedidos) * 90)
+      barra.style.width = `${Math.max(5, pct)}%`
+    }
+
+    // procura modelos novos na cena e baixa os que ainda não foram buscados
+    const buscarModelos = () => {
+      let novos = 0
+      modeloQuery(world).forEach((e) => {
+        try {
+          const dados: any = ecs.GltfModel.get(world, e)
+          const url = dados && dados.url
+          if (!url || jaBaixados.has(url)) return
+          jaBaixados.add(url)
+          pedidos += 1
+          novos += 1
+          fetch(encodeURI(url))
+            .then((r) => r.blob())
+            .catch((err) => console.log('[HUD] erro baixando', url, err))
+            .then(() => {
+              concluidos += 1
+              atualizarBarra()
+            })
+        } catch (err) {}
+      })
+      if (novos > 0) {
+        cenaEstavel = 0
+        console.log(`[HUD] achou ${novos} modelo(s), total ${pedidos}`)
+      } else {
+        cenaEstavel += 1
+      }
+    }
+
+    const liberar = (motivo: string) => {
       if (liberado) return
       liberado = true
       clearInterval(vigia)
       barra.style.width = '100%'
+      console.log(`[HUD] ${motivo} — ${Date.now() - inicio}ms, ${concluidos}/${pedidos} modelos`)
       world.events.dispatch(eid, 'tudo-pronto')
     }
 
-    // envolve o fetch do navegador para contar o que está baixando
-    const fetchOriginal = window.fetch.bind(window)
-    window.fetch = function (...args: any[]) {
-      emVoo += 1
-      ultimaAtividade = Date.now()
-      return (fetchOriginal as any)(...args).finally(() => {
-        emVoo -= 1
-        ultimaAtividade = Date.now()
-      })
-    } as any
-
-    // o mesmo para XMLHttpRequest, que alguns carregadores usam
-    const XHR = (window as any).XMLHttpRequest
-    if (XHR && XHR.prototype && XHR.prototype.send) {
-      const sendOriginal = XHR.prototype.send
-      XHR.prototype.send = function (...args: any[]) {
-        emVoo += 1
-        ultimaAtividade = Date.now()
-        const encerrar = () => {
-          emVoo -= 1
-          ultimaAtividade = Date.now()
-        }
-        this.addEventListener('loadend', encerrar, {once: true})
-        return sendOriginal.apply(this, args)
-      }
-    }
-
     const vigia = setInterval(() => {
-      const decorrido = Date.now() - inicio
-      const parado = Date.now() - ultimaAtividade
+      buscarModelos()
+      atualizarBarra()
 
-      // barra de progresso aproximada: cresce com o tempo, trava em 90%
-      const pct = Math.min(90, Math.round((decorrido / 8000) * 90))
-      if (!liberado) barra.style.width = `${pct}%`
-
-      if (decorrido > LIMITE_CARREGAMENTO) {
-        console.log('[HUD] tempo limite: liberando mesmo assim')
-        liberar()
+      if (Date.now() - inicio > LIMITE_CARREGAMENTO) {
+        liberar('tempo limite')
         return
       }
-      if (realidadePronta && emVoo === 0 && parado > SILENCIO_REDE) {
-        console.log('[HUD] rede quieta, tudo carregado')
-        liberar()
+
+      // libera quando: realidade pronta, a cena parou de criar modelos novos,
+      // e todos os downloads terminaram
+      const cenaPronta = cenaEstavel >= Math.round(ESPERA_CENA / 200)
+      const tudoBaixado = pedidos > 0 && concluidos >= pedidos
+      if (realidadePronta && cenaPronta && tudoBaixado) {
+        liberar('tudo carregado')
       }
     }, 200)
 
@@ -275,12 +285,11 @@ ecs.registerComponent({
     })
 
     // ---------- estados ----------
-    // 1) carregando: espera a realidade e o fim dos downloads
+    // 1) carregando: espera a realidade e o download dos modelos
     defineState('carregando')
       .initial()
       .listen(world.events.globalId, ecs.events.REALITY_READY, () => {
         realidadePronta = true
-        ultimaAtividade = Date.now()
       })
       .onEvent('tudo-pronto', 'instrucao')
 
