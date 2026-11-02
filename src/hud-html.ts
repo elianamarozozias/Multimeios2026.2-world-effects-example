@@ -16,6 +16,10 @@ const IMG = {
 // ⬇️ TROCAR pelos textos deste projeto
 const TEXTO_INSTRUCAO = 'Clique em uma zona plana para inserir o artefato 3D'
 const TEXTO_BOTAO = 'Reposicionar'
+const TEXTO_CARREGANDO = 'Carregando...'
+
+// se em 25s nada carregou, libera assim mesmo para não travar a experiência
+const LIMITE_CARREGAMENTO = 25000
 
 // ícones do botão de áudio (desenhados aqui, não precisam de imagem)
 const ICONE_PLAY = `<svg viewBox="0 0 24 24" width="55%" height="55%" fill="#fff"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/><path d="M14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>`
@@ -27,7 +31,11 @@ const CSS = `
   #hud .escondido { display: none !important; }
 
   #hud-loading { position: absolute; inset: 0; background: #000; color: #fff; pointer-events: none;
-    display: flex; align-items: center; justify-content: center; font-size: clamp(16px, 4.5vw, 24px); }
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    font-size: clamp(16px, 4.5vw, 24px); }
+  #hud-barra { width: min(70vw, 320px); height: 6px; border-radius: 3px;
+    background: rgba(255,255,255,.25); overflow: hidden; }
+  #hud-barra div { height: 100%; width: 0%; background: #fff; transition: width .25s; }
 
   #hud-gestos { position: absolute; left: 50%; transform: translateX(-50%);
     top: max(14px, env(safe-area-inset-top)); display: flex; gap: 3vw; }
@@ -77,12 +85,16 @@ const ligarBotao = (botao: HTMLElement, acao: () => void) => {
 
 ecs.registerComponent({
   name: 'hud-html',
-  // ⬇️ campo que aparece no painel do editor: o aluno digita o caminho do áudio aqui
   schema: {
+    // ⬇️ caminho do áudio, como aparece em src/assets
     audio: ecs.string,
+    // ⬇️ caminho do(s) modelo(s) 3D. Vários, separados por vírgula.
+    //    A tela de carregamento só sai quando eles terminarem de baixar.
+    modelos: ecs.string,
   },
   schemaDefaults: {
     audio: 'assets/audio.mp3',
+    modelos: 'assets/modelo.glb',
   },
   stateMachine: ({world, eid, schemaAttribute, defineState}) => {
     // ---------- monta o HTML ----------
@@ -98,7 +110,10 @@ ecs.registerComponent({
     const hud = document.createElement('div')
     hud.id = 'hud'
     hud.innerHTML = `
-      <div id="hud-loading">Carregando...</div>
+      <div id="hud-loading">
+        <span>${TEXTO_CARREGANDO}</span>
+        <div id="hud-barra"><div></div></div>
+      </div>
 
       <div id="hud-gestos" class="escondido">
         <div class="gesto"><div class="ic"><img src="${IMG.mover}"></div><span>Mover</span></div>
@@ -121,9 +136,57 @@ ecs.registerComponent({
     const el = (id: string) => hud.querySelector('#' + id) as HTMLElement
     const mostrar = (id: string) => el(id).classList.remove('escondido')
     const esconder = (id: string) => el(id).classList.add('escondido')
+    const barra = hud.querySelector('#hud-barra div') as HTMLElement
 
-    // seguro: se em 8s não liberou, tira o loading da frente (iPhone)
-    setTimeout(() => esconder('hud-loading'), 8000)
+    // ---------- carregamento ----------
+    // a tela só sai quando a realidade estiver pronta E os modelos baixados.
+    // o fetch coloca o arquivo no cache do navegador, então quando o 8th Wall
+    // for carregar o GLB ele aparece instantaneamente.
+    let realidadePronta = false
+    let modelosProntos = false
+    let liberado = false
+
+    const liberar = () => {
+      if (liberado) return
+      if (!realidadePronta || !modelosProntos) return
+      liberado = true
+      world.events.dispatch(eid, 'tudo-pronto')
+    }
+
+    const listaModelos = (schemaAttribute.get(eid).modelos || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
+
+    if (listaModelos.length === 0) {
+      modelosProntos = true
+    } else {
+      let prontos = 0
+      listaModelos.forEach((caminho) => {
+        fetch(encodeURI(caminho))
+          .then((r) => r.blob())
+          .catch((err) => console.log('[HUD] erro baixando', caminho, err))
+          .then(() => {
+            prontos += 1
+            barra.style.width = `${Math.round((prontos / listaModelos.length) * 100)}%`
+            if (prontos >= listaModelos.length) {
+              console.log('[HUD] modelos prontos')
+              modelosProntos = true
+              liberar()
+            }
+          })
+      })
+    }
+
+    // rede de segurança: nunca deixa o usuário preso na tela preta
+    setTimeout(() => {
+      if (!liberado) {
+        console.log('[HUD] tempo limite: liberando mesmo sem terminar')
+        realidadePronta = true
+        modelosProntos = true
+        liberar()
+      }
+    }, LIMITE_CARREGAMENTO)
 
     // ---------- áudio (Web Audio API) ----------
     // o elemento <audio> precisa de permissão a cada play, e isso falha quando
@@ -199,10 +262,14 @@ ecs.registerComponent({
     })
 
     // ---------- estados ----------
-    // 1) carregando
+    // 1) carregando: espera a realidade E os modelos
     defineState('carregando')
       .initial()
-      .onEvent(ecs.events.REALITY_READY, 'instrucao', {target: world.events.globalId})
+      .listen(world.events.globalId, ecs.events.REALITY_READY, () => {
+        realidadePronta = true
+        liberar()
+      })
+      .onEvent('tudo-pronto', 'instrucao')
 
     // 2) instrução no meio; some com qualquer toque
     //    (volta pra cá depois de cada Reposicionar)
