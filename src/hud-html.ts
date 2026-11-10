@@ -6,7 +6,11 @@ const logoQuery = ecs.defineQuery([Logo])
 // todas as entidades que têm um modelo 3D, inclusive as de dentro do prefab
 const modeloQuery = ecs.defineQuery([ecs.GltfModel])
 
-// ⬇️ TROCAR pelos caminhos das imagens deste projeto (como aparecem em src/assets)
+// ─────────────────────────────────────────────────────────────
+//  IDENTIDADE VISUAL — igual para todos os projetos do laboratório.
+//  O que muda de grupo para grupo (texto da instrução e áudio)
+//  fica no inspector, não aqui.
+// ─────────────────────────────────────────────────────────────
 const IMG = {
   mover: encodeURI('assets/Mover2.png'),
   escalar: encodeURI('assets/Escalar2.png'),
@@ -15,10 +19,10 @@ const IMG = {
   uff: encodeURI('assets/simbolo uff.png'),
 }
 
-// ⬇️ TROCAR pelos textos deste projeto
-const TEXTO_INSTRUCAO = 'Clique em uma zona plana para inserir o artefato 3D'
-const TEXTO_BOTAO = 'Reposicionar'
+const COR = '#3F1240'          // roxo dos cartões e botões
+const COR_RESET = '#F00'       // vermelho do botão Reposicionar
 const TEXTO_CARREGANDO = 'Carregando...'
+const TEXTO_BOTAO = 'Reposicionar'
 
 // tempo que o HUD espera para a cena terminar de montar o prefab
 const ESPERA_CENA = 1500
@@ -29,6 +33,7 @@ const LIMITE_CARREGAMENTO = 30000
 const ICONE_PLAY = `<svg viewBox="0 0 24 24" width="55%" height="55%" fill="#fff"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/><path d="M14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>`
 const ICONE_STOP = `<svg viewBox="0 0 24 24" width="45%" height="45%" fill="#fff"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>`
 const ICONE_TROCAR = `<svg viewBox="0 0 24 24" width="55%" height="55%" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>`
+const ICONE_PIN = `<svg viewBox="0 0 24 24" width="55%" height="55%" fill="#fff"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.6A2.6 2.6 0 1 1 12 6.4a2.6 2.6 0 0 1 0 5.2z"/></svg>`
 
 const CSS = `
   #hud * { box-sizing: border-box; }
@@ -51,7 +56,7 @@ const CSS = `
   #hud-gestos span { color: #fff; font-size: clamp(12px, 3.5vw, 18px); text-shadow: 0 1px 3px #000; }
 
   #hud-instrucao { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-    width: min(92vw, 520px); background: #3F1240; border-radius: 18px; padding: 14px 16px;
+    width: min(92vw, 520px); background: ${COR}; border-radius: 18px; padding: 14px 16px;
     display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
   #hud-instrucao img { width: clamp(44px, 13vw, 70px); }
   #hud-instrucao p { margin: 0; text-align: center; font-size: clamp(13px, 3.8vw, 18px); line-height: 1.25; color: #fff; }
@@ -60,19 +65,31 @@ const CSS = `
 
   #hud-reset { position: absolute; pointer-events: auto; touch-action: manipulation;
     right: max(16px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom));
-    background: #F00; color: #fff; border: none; border-radius: 14px;
+    background: ${COR_RESET}; color: #fff; border: none; border-radius: 14px;
     font-size: clamp(14px, 4vw, 20px); padding: clamp(10px, 3vw, 16px) clamp(16px, 5vw, 26px); }
 
-  /* botões redondos do canto esquerdo: áudio e trocar artefato */
-  #hud-audio, #hud-trocar { position: absolute; pointer-events: auto; touch-action: manipulation;
-    bottom: max(20px, env(safe-area-inset-bottom));
+  /* barra de botões redondos: áudio, trocar artefato e anotações.
+     é uma linha flex, então eles se acomodam sozinhos conforme aparecem */
+  #hud-acoes { position: absolute; display: flex; gap: clamp(8px, 2.5vw, 14px);
+    left: max(16px, env(safe-area-inset-left));
+    bottom: max(20px, env(safe-area-inset-bottom)); }
+  #hud-acoes button { pointer-events: auto; touch-action: manipulation;
     width: clamp(52px, 14vw, 72px); aspect-ratio: 1; border-radius: 50%; border: none; padding: 0;
-    background: #3F1240; display: flex; align-items: center; justify-content: center;
+    background: ${COR}; display: flex; align-items: center; justify-content: center;
     box-shadow: 0 2px 8px rgba(0,0,0,.4); }
-  #hud-audio { left: max(16px, env(safe-area-inset-left)); }
-  #hud-trocar { left: calc(max(16px, env(safe-area-inset-left)) + clamp(62px, 17vw, 86px)); }
-  /* sem áudio no projeto, o botão de trocar assume o canto */
-  #hud-trocar.sozinho { left: max(16px, env(safe-area-inset-left)); }
+  #hud-acoes button.off { opacity: .45; }
+
+  /* cartão das anotações clicáveis */
+  #hud-nota { position: absolute; left: 50%; transform: translateX(-50%);
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + clamp(66px, 18vw, 92px));
+    width: min(92vw, 520px); max-height: 45vh; overflow-y: auto;
+    background: ${COR}; color: #fff; border-radius: 18px; padding: 16px 18px;
+    pointer-events: auto; box-shadow: 0 4px 16px rgba(0,0,0,.45); }
+  #hud-nota h3 { margin: 0 30px 6px 0; font-size: clamp(15px, 4.2vw, 20px); font-weight: 600; }
+  #hud-nota p { margin: 0; font-size: clamp(13px, 3.6vw, 17px); line-height: 1.4; }
+  #hud-nota-fechar { position: absolute; top: 6px; right: 8px; background: none; border: none;
+    color: #fff; font-size: clamp(22px, 6vw, 28px); line-height: 1; padding: 4px 10px;
+    pointer-events: auto; touch-action: manipulation; }
 `
 
 // liga um botão do HTML a uma função, funcionando em Android e iPhone
@@ -96,13 +113,17 @@ const ligarBotao = (botao: HTMLElement, acao: () => void) => {
 ecs.registerComponent({
   name: 'hud-html',
   schema: {
-    // ⬇️ caminho do áudio, como aparece em src/assets. Deixe vazio se não tiver.
-    audio: ecs.string,
+    // ⬇️ preenchidos no inspector, não no código
+    instrucao: ecs.string,   // frase do cartão inicial
+    audio: ecs.string,       // caminho do áudio; deixe vazio se não tiver
   },
   schemaDefaults: {
+    instrucao: 'Clique em uma zona plana para inserir o artefato 3D',
     audio: 'assets/audio.mp3',
   },
   stateMachine: ({world, eid, schemaAttribute, defineState}) => {
+    const {instrucao} = schemaAttribute.get(eid)
+
     // ---------- monta o HTML ----------
     let style = document.getElementById('hud-style')
     if (!style) {
@@ -129,13 +150,23 @@ ecs.registerComponent({
 
       <div id="hud-instrucao" class="escondido">
         <img src="${IMG.lafda}">
-        <p>${TEXTO_INSTRUCAO}</p>
+        <p>${instrucao || ''}</p>
         <img src="${IMG.uff}">
         <b>OK</b>
       </div>
 
-      <button id="hud-audio" class="escondido">${ICONE_PLAY}</button>
-      <button id="hud-trocar" class="escondido">${ICONE_TROCAR}</button>
+      <div id="hud-nota" class="escondido">
+        <button id="hud-nota-fechar">&times;</button>
+        <h3 id="hud-nota-titulo"></h3>
+        <p id="hud-nota-texto"></p>
+      </div>
+
+      <div id="hud-acoes">
+        <button id="hud-audio" class="escondido">${ICONE_PLAY}</button>
+        <button id="hud-trocar" class="escondido">${ICONE_TROCAR}</button>
+        <button id="hud-notas" class="escondido">${ICONE_PIN}</button>
+      </div>
+
       <button id="hud-reset" class="escondido">${TEXTO_BOTAO}</button>
     `
     document.body.appendChild(hud)
@@ -285,9 +316,6 @@ ecs.registerComponent({
       else tocarAudio()
     })
 
-    // sem áudio configurado, o botão de trocar assume o canto esquerdo
-    if (!ctx || !caminhoAudio) el('hud-trocar').classList.add('sozinho')
-
     // ---------- troca de artefato ----------
     // cada GLB dentro do prefab leva o componente 'alternar-objeto' com sua
     // ordem (1, 2, 3...). Eles se anunciam ao nascer e o HUD conta quantos são:
@@ -305,8 +333,45 @@ ecs.registerComponent({
 
     ligarBotao(el('hud-trocar'), () => {
       if (totalObjetos < 2) return
+      esconder('hud-nota')   // a anotação aberta é do artefato anterior
       objetoAtual = (objetoAtual % totalObjetos) + 1
       world.events.dispatch(world.events.globalId, 'trocar-objeto', {indice: objetoAtual} as any)
+    })
+
+    // ---------- anotações clicáveis ----------
+    // pontos marcados no modelo levam o componente 'Anotacao'. Eles se anunciam
+    // ao nascer; o botão de pin aparece se houver ao menos um e liga/desliga
+    // todos de uma vez, porque às vezes os pontos atrapalham a visualização.
+    let temAnotacoes = false
+    let anotacoesVisiveis = true
+    const botaoNotas = el('hud-notas')
+
+    world.events.addListener(world.events.globalId, 'anotacao-registrada', () => {
+      if (!temAnotacoes) {
+        temAnotacoes = true
+        console.log('[HUD] anotações encontradas')
+      }
+    })
+
+    world.events.addListener(world.events.globalId, 'abrir-anotacao', (e: any) => {
+      el('hud-nota-titulo').textContent = e.data?.titulo || ''
+      el('hud-nota-texto').textContent = e.data?.texto || ''
+      mostrar('hud-nota')
+    })
+
+    ligarBotao(el('hud-nota-fechar'), () => esconder('hud-nota'))
+
+    const aplicarAnotacoes = () => {
+      botaoNotas.classList.toggle('off', !anotacoesVisiveis)
+      if (!anotacoesVisiveis) esconder('hud-nota')
+      world.events.dispatch(
+        world.events.globalId, 'anotacoes-visiveis', {visivel: anotacoesVisiveis} as any
+      )
+    }
+
+    ligarBotao(botaoNotas, () => {
+      anotacoesVisiveis = !anotacoesVisiveis
+      aplicarAnotacoes()
     })
 
     // ---------- botão Reposicionar ----------
@@ -330,11 +395,15 @@ ecs.registerComponent({
       .onEnter(() => {
         pararAudio()
         objetoAtual = 1
+        anotacoesVisiveis = true
+        aplicarAnotacoes()
         esconder('hud-loading')
         esconder('hud-gestos')
         esconder('hud-reset')
         esconder('hud-audio')
         esconder('hud-trocar')
+        esconder('hud-notas')
+        esconder('hud-nota')
         mostrar('hud-instrucao')
       })
       .listen(world.events.globalId, ecs.input.SCREEN_TOUCH_START, () => {
@@ -343,7 +412,7 @@ ecs.registerComponent({
       })
       .onEvent(OBJECT_PLACED_EVENT, 'colocado', {target: world.events.globalId})
 
-    // 3) objeto colocado: gestos + reposicionar + áudio + troca de artefato
+    // 3) objeto colocado: gestos, reposicionar, áudio, troca e anotações
     defineState('colocado')
       .onEnter(() => {
         esconder('hud-loading')
@@ -354,8 +423,9 @@ ecs.registerComponent({
           mostrar('hud-audio')
           tocarAudio()
         }
-        // só faz sentido oferecer a seta se houver mais de um artefato
+        // cada botão só aparece se o projeto tiver aquilo
         if (totalObjetos > 1) mostrar('hud-trocar')
+        if (temAnotacoes) mostrar('hud-notas')
       })
       .onEvent('hud-reset-click', 'resetando', {target: world.events.globalId})
 
@@ -368,6 +438,8 @@ ecs.registerComponent({
         esconder('hud-gestos')
         esconder('hud-audio')
         esconder('hud-trocar')
+        esconder('hud-notas')
+        esconder('hud-nota')
         const tempVector = ecs.math.vec3.zero()
         logoQuery(world).forEach((e) => {
           world.transform.getLocalPosition(e, tempVector)
