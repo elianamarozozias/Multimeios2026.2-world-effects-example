@@ -419,7 +419,8 @@ ecs.registerComponent({
         esconder('hud-instrucao')
         mostrar('hud-gestos')
         mostrar('hud-reset')
-        if (ctx) {
+        // só aparece se o projeto realmente tem um arquivo de áudio
+        if (ctx && caminhoAudio) {
           mostrar('hud-audio')
           tocarAudio()
         }
