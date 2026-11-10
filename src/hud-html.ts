@@ -25,9 +25,10 @@ const ESPERA_CENA = 1500
 // limite para não travar a experiência se algo der errado
 const LIMITE_CARREGAMENTO = 30000
 
-// ícones do botão de áudio (desenhados aqui, não precisam de imagem)
+// ícones dos botões redondos (desenhados aqui, não precisam de imagem)
 const ICONE_PLAY = `<svg viewBox="0 0 24 24" width="55%" height="55%" fill="#fff"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/><path d="M14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>`
 const ICONE_STOP = `<svg viewBox="0 0 24 24" width="45%" height="45%" fill="#fff"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>`
+const ICONE_TROCAR = `<svg viewBox="0 0 24 24" width="55%" height="55%" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>`
 
 const CSS = `
   #hud * { box-sizing: border-box; }
@@ -62,11 +63,16 @@ const CSS = `
     background: #F00; color: #fff; border: none; border-radius: 14px;
     font-size: clamp(14px, 4vw, 20px); padding: clamp(10px, 3vw, 16px) clamp(16px, 5vw, 26px); }
 
-  #hud-audio { position: absolute; pointer-events: auto; touch-action: manipulation;
-    left: max(16px, env(safe-area-inset-left)); bottom: max(20px, env(safe-area-inset-bottom));
+  /* botões redondos do canto esquerdo: áudio e trocar artefato */
+  #hud-audio, #hud-trocar { position: absolute; pointer-events: auto; touch-action: manipulation;
+    bottom: max(20px, env(safe-area-inset-bottom));
     width: clamp(52px, 14vw, 72px); aspect-ratio: 1; border-radius: 50%; border: none; padding: 0;
     background: #3F1240; display: flex; align-items: center; justify-content: center;
     box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+  #hud-audio { left: max(16px, env(safe-area-inset-left)); }
+  #hud-trocar { left: calc(max(16px, env(safe-area-inset-left)) + clamp(62px, 17vw, 86px)); }
+  /* sem áudio no projeto, o botão de trocar assume o canto */
+  #hud-trocar.sozinho { left: max(16px, env(safe-area-inset-left)); }
 `
 
 // liga um botão do HTML a uma função, funcionando em Android e iPhone
@@ -129,6 +135,7 @@ ecs.registerComponent({
       </div>
 
       <button id="hud-audio" class="escondido">${ICONE_PLAY}</button>
+      <button id="hud-trocar" class="escondido">${ICONE_TROCAR}</button>
       <button id="hud-reset" class="escondido">${TEXTO_BOTAO}</button>
     `
     document.body.appendChild(hud)
@@ -278,6 +285,30 @@ ecs.registerComponent({
       else tocarAudio()
     })
 
+    // sem áudio configurado, o botão de trocar assume o canto esquerdo
+    if (!ctx || !caminhoAudio) el('hud-trocar').classList.add('sozinho')
+
+    // ---------- troca de artefato ----------
+    // cada GLB dentro do prefab leva o componente 'alternar-objeto' com sua
+    // ordem (1, 2, 3...). Eles se anunciam ao nascer e o HUD conta quantos são:
+    // o botão só aparece quando há mais de um.
+    let totalObjetos = 1
+    let objetoAtual = 1
+
+    world.events.addListener(world.events.globalId, 'objeto-registrado', (e: any) => {
+      const o = Math.round(e.data?.ordem || 1)
+      if (o > totalObjetos) {
+        totalObjetos = o
+        console.log(`[HUD] ${totalObjetos} artefato(s) no prefab`)
+      }
+    })
+
+    ligarBotao(el('hud-trocar'), () => {
+      if (totalObjetos < 2) return
+      objetoAtual = (objetoAtual % totalObjetos) + 1
+      world.events.dispatch(world.events.globalId, 'trocar-objeto', {indice: objetoAtual} as any)
+    })
+
     // ---------- botão Reposicionar ----------
     ligarBotao(el('hud-reset'), () => {
       console.log('[HUD] reposicionar clicado')
@@ -298,10 +329,12 @@ ecs.registerComponent({
     defineState('instrucao')
       .onEnter(() => {
         pararAudio()
+        objetoAtual = 1
         esconder('hud-loading')
         esconder('hud-gestos')
         esconder('hud-reset')
         esconder('hud-audio')
+        esconder('hud-trocar')
         mostrar('hud-instrucao')
       })
       .listen(world.events.globalId, ecs.input.SCREEN_TOUCH_START, () => {
@@ -310,7 +343,7 @@ ecs.registerComponent({
       })
       .onEvent(OBJECT_PLACED_EVENT, 'colocado', {target: world.events.globalId})
 
-    // 3) objeto colocado: gestos + reposicionar + áudio tocando sozinho
+    // 3) objeto colocado: gestos + reposicionar + áudio + troca de artefato
     defineState('colocado')
       .onEnter(() => {
         esconder('hud-loading')
@@ -321,6 +354,8 @@ ecs.registerComponent({
           mostrar('hud-audio')
           tocarAudio()
         }
+        // só faz sentido oferecer a seta se houver mais de um artefato
+        if (totalObjetos > 1) mostrar('hud-trocar')
       })
       .onEvent('hud-reset-click', 'resetando', {target: world.events.globalId})
 
@@ -332,6 +367,7 @@ ecs.registerComponent({
         esconder('hud-reset')
         esconder('hud-gestos')
         esconder('hud-audio')
+        esconder('hud-trocar')
         const tempVector = ecs.math.vec3.zero()
         logoQuery(world).forEach((e) => {
           world.transform.getLocalPosition(e, tempVector)
