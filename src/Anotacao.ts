@@ -1,5 +1,6 @@
 import * as ecs from '@8thwall/ecs'
 
+
 // ─────────────────────────────────────────────────────────────
 //  ANOTAÇÃO CLICÁVEL
 //
@@ -19,21 +20,33 @@ import * as ecs from '@8thwall/ecs'
 //  esfera não é o que está em cena, a esfera se cala sozinha.
 // ─────────────────────────────────────────────────────────────
 
+
 // ─────────────────────────────────────────────────────────────
 //  AJUSTE FINO DO TOQUE
 // ─────────────────────────────────────────────────────────────
+
 
 // Tolerância em pixels ao redor do ponto. Como a esfera na tela é pequena,
 // aceitar um toque "perto dela" é o que torna o alvo confortável no celular.
 // 44 = padrão | 30 = exige mais precisão | 60 = bem permissivo
 const RAIO_TOQUE = 44
 
+
 // Se o dedo andar mais que isso entre encostar e soltar, foi arrasto
 // (a pessoa estava movendo o objeto) e a anotação não abre.
 const LIMITE_ARRASTO = 12
 
+
+// Quanto tempo as anotações ficam surdas depois que o objeto é inserido.
+// O mesmo toque que insere o objeto acaba soltando o dedo em cima de uma
+// esfera recém-nascida, o que abria um cartão sem ninguém ter pedido.
+// 500ms = padrão | 0 = desliga a carência
+const CARENCIA_APOS_INSERIR = 500
+
+
 // até onde subir na hierarquia procurando um pai escondido
 const LIMITE_PAIS = 20
+
 
 // ─────────────────────────────────────────────────────────────
 //  Disputa entre pontos próximos.
@@ -43,6 +56,7 @@ const LIMITE_PAIS = 20
 // ─────────────────────────────────────────────────────────────
 let candidata: {dist: number, titulo: string, texto: string} | null = null
 let resolvendo = false
+
 
 const concorrer = (world: any, dist: number, titulo: string, texto: string) => {
   if (!candidata || dist < candidata.dist) candidata = {dist, titulo, texto}
@@ -59,6 +73,7 @@ const concorrer = (world: any, dist: number, titulo: string, texto: string) => {
   }, 0)
 }
 
+
 ecs.registerComponent({
   // ⚠️ este nome precisa ser idêntico ao que aparece no inspector
   name: 'Anotacao',
@@ -73,6 +88,19 @@ ecs.registerComponent({
   stateMachine: ({world, eid, schemaAttribute, defineState}) => {
     let inicio: {x: number, y: number} | null = null
     let multiToque = false
+    let valiaNoInicio = false
+
+
+    // Em que fase a experiência está. Enquanto o objeto não foi inserido —
+    // tela de carregamento, cartão de instrução, aquecimento do prefab — as
+    // esferas existem na cena mas não devem responder a nada.
+    let objetoColocado = false
+    let colocadoEm = 0
+
+
+    const podeAbrir = () =>
+      objetoColocado && (Date.now() - colocadoEm) > CARENCIA_APOS_INSERIR
+
 
     // O toque próprio do 8th Wall erra quando a esfera está aninhada dentro
     // de um GLB. Então a gente não depende dele: projeta a posição real da
@@ -85,12 +113,15 @@ ecs.registerComponent({
         const cam = three.activeCamera
         if (!obj || !cam) return null
 
+
         const v = obj.position.clone()
         v.setFromMatrixPosition(obj.matrixWorld)
         v.project(cam)
 
+
         // atrás da câmera
         if (v.z < -1 || v.z > 1) return null
+
 
         const rect = three.renderer.domElement.getBoundingClientRect()
         const sx = rect.left + (v.x * 0.5 + 0.5) * rect.width
@@ -100,6 +131,7 @@ ecs.registerComponent({
         return null
       }
     }
+
 
     // Se esta esfera, ou o GLB que a contém, ou qualquer pai acima estiver
     // escondido, o toque é ignorado. É isso que faz as anotações do artefato 2
@@ -111,8 +143,10 @@ ecs.registerComponent({
           if (ecs.Hidden.has(world, atual)) return true
         } catch (e) {}
 
+
         let pai: any = null
         try { pai = world.getParent(atual) } catch (e) { pai = null }
+
 
         if (pai === null || pai === undefined || pai === atual) return false
         atual = pai
@@ -120,25 +154,45 @@ ecs.registerComponent({
       return false
     }
 
+
     const abrir = (dist: number) => {
       const {titulo, texto} = schemaAttribute.get(eid)
       concorrer(world, dist, titulo, texto)
     }
 
+
     const mostrarPonto = () => { try { ecs.Hidden.remove(world, eid) } catch (e) {} }
     const esconderPonto = () => { try { ecs.Hidden.set(world, eid) } catch (e) {} }
+
 
     // ---------- toque na tela ----------
     const naHud = (alvo: any) => {
       try { return !!(alvo && alvo.closest && alvo.closest('#hud')) } catch (e) { return false }
     }
 
+
+    // vale a pena abrir este toque? precisa valer tanto no encostar quanto no
+    // soltar. O toque que insere o objeto começa com objetoColocado falso,
+    // então ele morre aqui mesmo que o dedo solte em cima de uma esfera.
+    const concluir = (x: number, y: number, comeco: {x: number, y: number}) => {
+      if (!valiaNoInicio || !podeAbrir()) return
+      if (Math.hypot(x - comeco.x, y - comeco.y) > LIMITE_ARRASTO) return
+      if (estaEscondido()) return
+
+
+      const d = distanciaDoDedo(x, y)
+      if (d !== null && d <= RAIO_TOQUE) abrir(d)
+    }
+
+
     const onStart = (ev: TouchEvent) => {
       if (naHud(ev.target)) { inicio = null; return }
       multiToque = ev.touches.length > 1
+      valiaNoInicio = podeAbrir()
       const t = ev.touches[0]
       inicio = t ? {x: t.clientX, y: t.clientY} : null
     }
+
 
     const onEnd = (ev: TouchEvent) => {
       const comeco = inicio
@@ -147,32 +201,28 @@ ecs.registerComponent({
       if (ev.touches.length > 0) return          // ainda tem dedo na tela
       const t = ev.changedTouches && ev.changedTouches[0]
       if (!t) return
-      if (Math.hypot(t.clientX - comeco.x, t.clientY - comeco.y) > LIMITE_ARRASTO) return
-      if (estaEscondido()) return
-
-      const d = distanciaDoDedo(t.clientX, t.clientY)
-      if (d !== null && d <= RAIO_TOQUE) abrir(d)
+      concluir(t.clientX, t.clientY, comeco)
     }
+
 
     // mouse, para testar no preview do computador
     const onDown = (ev: PointerEvent) => {
       if (ev.pointerType === 'touch') return
       if (naHud(ev.target)) { inicio = null; return }
       multiToque = false
+      valiaNoInicio = podeAbrir()
       inicio = {x: ev.clientX, y: ev.clientY}
     }
+
 
     const onUp = (ev: PointerEvent) => {
       if (ev.pointerType === 'touch') return
       const comeco = inicio
       inicio = null
       if (!comeco) return
-      if (Math.hypot(ev.clientX - comeco.x, ev.clientY - comeco.y) > LIMITE_ARRASTO) return
-      if (estaEscondido()) return
-
-      const d = distanciaDoDedo(ev.clientX, ev.clientY)
-      if (d !== null && d <= RAIO_TOQUE) abrir(d)
+      concluir(ev.clientX, ev.clientY, comeco)
     }
+
 
     // avisa o HUD que existe, para o botão de anotações aparecer.
     // repete algumas vezes porque o HUD pode ainda não estar ouvindo
@@ -183,6 +233,7 @@ ecs.registerComponent({
     avisar()
     setTimeout(avisar, 500)
     setTimeout(avisar, 1500)
+
 
     defineState('default')
       .initial()
@@ -200,11 +251,13 @@ ecs.registerComponent({
         window.removeEventListener('pointerdown', onDown)
         window.removeEventListener('pointerup', onUp)
       })
-      // rede de segurança: se o toque do próprio 8th Wall acertar a esfera,
-      // vale também. Ganha quem estiver mais perto do dedo.
-      .listen(eid, ecs.input.SCREEN_TOUCH_START, () => {
-        if (estaEscondido()) return
-        abrir(0)
+      // fases da experiência
+      .listen(world.events.globalId, 'object-placed', () => {
+        objetoColocado = true
+        colocadoEm = Date.now()
+      })
+      .listen(world.events.globalId, 'object-reset', () => {
+        objetoColocado = false
       })
       // o botão do HUD liga e desliga todos os pontos de uma vez
       .listen(world.events.globalId, 'anotacoes-visiveis', (e) => {
